@@ -1,43 +1,57 @@
 #include "cache.h"
 
+#define MEM_PRINCIPAL 4096
+
+uint16_t memPrincipal[MEM_PRINCIPAL]; // Memoria principal de 64KB
+
+/*El tamanio de palabra que utilizamos es de  2 bytes/16 bits*/
+
+/* La via es un array de palabras y el numero de bloque 
+dentro de la via queda determinado por el tamanio del bloque.*/
+
+typedef struct bloque {
+    uint16_t tag;
+    uint16_t *palabras;
+} bloque_t;
+
 struct cache {
-    int vias;
+    int cVias;
     int tamanio;
-    bloque_t *bloques;
-}
+    bloque_t *bloque;
+};
 
-void init() {
-
-}
-
-unsigned int find_set(int address) {
+void cache_init(cache_t cache) {
 
 }
 
-unsigned int find_lru(int setnum) {
+unsigned int cache_find_set(int address) {
 
 }
 
-unsigned int is_dirty(int way, int setnum) {
+unsigned int cache_find_lru(int setnum) {
 
 }
 
-void read_block(int blocknum) {
+unsigned int cache_is_dirty(int way, int setnum) {
 
 }
 
-void write_block(int way, int setnum) {
+void cache_read_block(int blocknum) {
 
 }
 
-char read_byte(int address) {
+void cache_write_block(int way, int setnum) {
 
 }
 
-void write_byte(int address, char value) {
+char cache_read_byte(int address) {
+
+}
+
+void cache_write_byte(int address, char value) {
 
 } 
 
-int get_miss_rate() {
+int cache_get_miss_rate() {
 
 }
