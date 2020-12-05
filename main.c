@@ -8,19 +8,19 @@
 #define BS_OPTION 'bs'
 
 void show_help(){
-		printf("Usage: \n \
-		tp2 -h \n \
-		tp2 -V \n \
-		tp2 options archivo \n \
-		Options: \n \
+	printf("Usage: \n \
+    tp2 -h \n \
+    tp2 -V \n \
+    tp2 options archivo \n \
+    Options: \n \
 		-V, --version Print version and quit.\n \
 		-h, --help Print this information.\n \
 		-o, --output Location of the output file.\n \
 		-w, --input Location of the input file.\n \
 		-cs, --action Program action: encode (default) or decode.\n \
     -bs, --action Program action: encode (default) or decode.\n \
-		Examples:\n \
-		tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
+    Examples:\n \
+    tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
 }
 
 
