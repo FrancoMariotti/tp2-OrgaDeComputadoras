@@ -7,6 +7,9 @@
 #define VALID 1
 #define INVALID 0
 
+#define SUCCESS 0
+#define ERROR 1
+
 int16_t memPrincipal[MAIN_MEMORY]; // Memoria principal de 64KB
 
 /* La via es un array de palabras y el numero de bloque 
@@ -30,7 +33,7 @@ struct cache {
 
 /* Pre: La estructura cache fue inicializada
  */
-void cache_init(cache_t self) {
+int cache_init(cache_t* self) {
   //incializo frecuencia de miss en cero.
   self->miss_rate = 0;
   //inicializa la memoria en cero.
@@ -38,11 +41,15 @@ void cache_init(cache_t self) {
 
   self->bloques = (bloque_t*)malloc(sizeof(bloque_t)*self->size);
 
+  if(!self->bloques) return ERROR;
+
   for (size_t i = 0; i < size; i++) {
     self->bloques[i]->dirty = 0;
     self->bloques[i]->valid = INVALID;
     self->bloques[i]->last_accessed = 0;
   }
+
+  return SUCCESS;
 }
 
 unsigned int cache_find_set(cache_t* self,int address) {
