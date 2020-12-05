@@ -4,11 +4,11 @@
 
 uint16_t memPrincipal[MEM_PRINCIPAL]; // Memoria principal de 64KB
 
-/*El tamanio de palabra que utilizamos es de  2 bytes/16 bits*/
+//El tamanio de palabra que utilizamos es de  2 bytes/16 bits
 
 /* La via es un array de palabras y el numero de bloque 
-dentro de la via queda determinado por el tamanio del bloque.*/
-
+ * dentro de la via queda determinado por el tamanio del bloque.
+ */
 typedef struct bloque {
     uint16_t tag;
     uint16_t *palabras;
@@ -20,6 +20,8 @@ struct cache {
     bloque_t *bloque;
 };
 
+/* Pre: La estructura cache fue inicializada
+ */
 void cache_init(cache_t cache) {
 
 }
