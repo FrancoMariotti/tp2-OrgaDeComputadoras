@@ -1,5 +1,11 @@
 #include "cache.h"
 
+struct cache {
+    int vias;
+    int tamanio;
+    bloque_t *bloques;
+}
+
 void init() {
 
 }
