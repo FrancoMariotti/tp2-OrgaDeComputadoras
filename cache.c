@@ -113,7 +113,10 @@ void cache_read_block(cache_t* self,int blocknum) {
   int way = find_lru(self->blocks,set);
 
   block_t* block = self->blocks + offset + way;
-  memcpy(block->words, mainMemory , self->block_size);
+
+  //copio el bloque a la cache en el conjunto correspondiente.
+  int memory_offset = blocknum * self->block_size / WORD_SIZE;
+  memcpy(block->words, mainMemory + memory_offset , self->block_size);
 }
 
 void cache_write_block(cache_t* self,int way, int setnum) {
