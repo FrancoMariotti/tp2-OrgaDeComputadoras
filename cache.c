@@ -18,7 +18,7 @@ int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
  * dentro de la via queda determinado por el tamanio del bloque.
  */
 
-int cache_amount_blocks(int cs,int bs) {
+int cache_get_blocks(int cs,int bs) {
   return (cs * 1024) / bs;
 }
 
@@ -54,7 +54,7 @@ static int get_bits(int num) {
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   //inicializa la memoria en cero.
   memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
-  self->blocks_len = cache_amount_blocks(cs, bs);
+  self->blocks_len = cache_get_blocks(cs, bs);
 
   bool error = false;
 
@@ -91,8 +91,8 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   return (index >> bits_tag);
 }
 
-unsigned int cache_find_lru(cache_t* self,int setnum) {
-  return SUCCESS;
+static unsigned int find_lru(block_t *blocks,int setnum) {
+  return 1;
 }
 
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
@@ -105,9 +105,15 @@ unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
 
 void cache_read_block(cache_t* self,int blocknum) {
   //Aca hay que tener en cuenta la politica de reemplazo LRU
-
   //cache[conjunto][via] = mainMemory[blocknum]
+  //set = blocknum % sets
+  int set  = blocknum % (self->blocks_len / self->ways);
+  //bloques que me tengo que desplzar.
+  int offset = self->ways * set;
+  int way = find_lru(self->blocks,set);
 
+  block_t* block = self->blocks + offset + way;
+  memcpy(block->words, mainMemory , self->block_size);
 }
 
 void cache_write_block(cache_t* self,int way, int setnum) {

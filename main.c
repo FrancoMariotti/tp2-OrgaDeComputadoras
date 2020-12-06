@@ -90,13 +90,11 @@ int main(int argc, char **argv) {
   printf( "Me piden un cache de size: %d y tamanio de bloque: %d y vias: %d\n", cache_size,block_size,ways);
 
   cache_t cache;
-  int blocks_size = cache_amount_blocks(cache_size,block_size);
-  block_t blocks[blocks_size];
+  int len_blocks = cache_get_blocks(cache_size,block_size);
+  block_t blocks[len_blocks];
 
   cache_init(&cache,blocks,ways,cache_size,block_size);
 
-  printf("Conjunto al que pertence address:%d\n",cache_find_set(&cache,0x0010));
-  printf("Conjunto is_dirty:%d\n",cache_is_dirty(&cache,2,cache_find_set(&cache,0x0010)));
   cache_destroy(&cache);
   return 0;
 }
