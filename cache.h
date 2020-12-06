@@ -1,5 +1,6 @@
 #ifndef __CACHE_H_
 #define __CACHE_H_
+#include "stdint.h"
 /*Este modulo implementa una cache asociativa por conjuntos*/
 
 typedef struct cache cache_t;

@@ -1,11 +1,14 @@
 #include "stdio.h"
+#include "getopt.h"
+#include "stdbool.h"
 
 #define V_OPTION 'V'
 #define H_OPTION 'h'
 #define O_OPTION 'o'
 #define W_OPTION 'w'
-#define CS_OPTION 'cs'
-#define BS_OPTION 'bs'
+#define CACHE_OPTION 'c'
+#define BLOCK_OPTION 'b'
+#define SIZE_OPTION  's'
 
 void show_help(){
   printf("Usage: \n \
@@ -23,7 +26,7 @@ void show_help(){
     tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
 }
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char **argv) {
   int c; 
   
   while (true) {
@@ -33,39 +36,29 @@ int main(int argc, char const *argv[]) {
       {"version", no_argument, 0, V_OPTION},
       {"help", no_argument, 0, H_OPTION},
       {"ways", no_argument, 0, W_OPTION},
-      {"cachesize", required_argument, 0, CS_OPTION},
-      {"blocksize", required_argument, 0, BS_OPTION},
+      {"cachesize", required_argument, 0, CACHE_OPTION},
+      {"blocksize", required_argument, 0, BLOCK_OPTION},
       {"output", required_argument, 0, O_OPTION},
     };
 
-    c = getopt_long(argc, argv, "Vhdmo:", long_options, &option_index);
+    c = getopt_long(argc, argv, "Vhw:cs:bs:o:", long_options, &option_index);
     if (c == -1)
       break;
 
-    switch (c) {
-      case V_OPTION:
-        break;
-      
-      case H_OPTION:
-        show_help();
-        break;
-      
-      case W_OPTION:
-        break;
-      
-      case CS_OPTION:
-        break;
+    if ( c == V_OPTION ) {
 
-      case BS_OPTION:
-        
-        break;
+    } else if ( c == H_OPTION ) {
+      show_help();
+    } else if ( c == W_OPTION ) {
 
-      case O_OPTION:
-        
-        break;
+    } else if ( c == CACHE_OPTION ) {
+
+    } else if ( c == BLOCK_OPTION ) {
       
-      default:
+    } else if ( c == O_OPTION ) {
+      
     }
+
   }
   return 0;
 }
