@@ -71,7 +71,8 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
 
   self->blocks = blocks;
   self->ways = ways;
-  self->miss_rate = 0;
+  self->total_accesses = 0;
+  self->missed_accesses = 0;
   self->size = cs;
   self->block_size = bs;
 
@@ -132,7 +133,10 @@ void cache_write_byte(cache_t* self,int address, char value) {
 } 
 
 int cache_get_miss_rate(cache_t* self) {
-  return self->miss_rate;
+  if(self->total_accesses) {
+    return self->missed_accesses / self->total_accesses
+  }
+  return 0;
 }
 
 void cache_destroy(cache_t* self) {
