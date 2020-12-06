@@ -50,8 +50,8 @@ static void blocks_destroy(block_t *blocks,int cs,int bs) {
   int amount_blocks = cache_amount_blocks(cs,bs);
   
   for (int i=0; i < amount_blocks; i++) {
-    if(blocks[i]->words) {
-      free(blocks[i]->words);
+    if(blocks[i].words) {
+      free(blocks[i].words);
     }
   }
 }
@@ -78,8 +78,8 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
  
   //incializo frecuencia de miss en cero.
   self->miss_rate = 0;
-  self->size = cache_size;
-  self->block_size = block_size;
+  self->size = cs;
+  self->block_size = bs;
 
   return SUCCESS;
 }
@@ -116,7 +116,7 @@ void cache_write_block(cache_t* self,int way, int setnum) {
 
 }
 
-char cache_read_byte(cahce_t* self,int address) {
+char cache_read_byte(cache_t* self,int address) {
 
 }
 
