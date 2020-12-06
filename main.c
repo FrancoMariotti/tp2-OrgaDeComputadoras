@@ -28,7 +28,10 @@ void show_help(){
 
 int main(int argc, char **argv) {
   int c; 
-  
+  bool c_flag = false;
+  bool b_flag = false;
+  char *cvalue = NULL;
+
   while (true) {
     int option_index = 0;
 
@@ -41,7 +44,7 @@ int main(int argc, char **argv) {
       {"output", required_argument, 0, O_OPTION},
     };
 
-    c = getopt_long(argc, argv, "Vhw:cs:bs:o:", long_options, &option_index);
+    c = getopt_long(argc, argv, "Vhw:cbs:o:", long_options, &option_index);
     if (c == -1)
       break;
 
@@ -52,13 +55,17 @@ int main(int argc, char **argv) {
     } else if ( c == W_OPTION ) {
 
     } else if ( c == CACHE_OPTION ) {
-
+      c_flag = true;
     } else if ( c == BLOCK_OPTION ) {
-      
+      b_flag = true;
+    } else if ( c == SIZE_OPTION ) {
+      if(c_flag || b_flag)
+        cvalue = optarg;
     } else if ( c == O_OPTION ) {
       
     }
-
   }
+
+  printf("El size ingresado es: %s\n",cvalue);
   return 0;
 }
