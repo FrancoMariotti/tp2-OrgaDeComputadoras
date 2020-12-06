@@ -58,7 +58,7 @@ static void blocks_destroy(block_t *blocks,int cs,int bs) {
 
 static int amount_bits(int num) {
   int amount_bits;
-  for(amount_bits = 0, (amount_bits >> 2) > 1; amount_bits++);
+  for(amount_bits = 0, (amount_bits >> 1) > 1; amount_bits++);
   
   return amount_bits
 }
