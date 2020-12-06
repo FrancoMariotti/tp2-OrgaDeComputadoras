@@ -37,13 +37,13 @@ int cache_amount_blocks(int cs,int bs) {
 }
 
 static int initialize_block(block_t *block,int bs) { 
-    block->words = (int16_t*) malloc(bs);
-    if(!block->words) return ERROR;
+  block->words = (int16_t*) malloc(bs);
+  if(!block->words) return ERROR;
 
-    block->dirty = 0;
-    block->valid = INVALID;
-    block->last_accessed = 0;
-    return SUCCESS;
+  block->dirty = 0;
+  block->valid = INVALID;
+  block->last_accessed = 0;
+  return SUCCESS;
 }
 
 static void blocks_destroy(block_t *blocks,int cs,int bs) {
