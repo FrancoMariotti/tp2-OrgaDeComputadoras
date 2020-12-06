@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "getopt.h"
 #include "stdbool.h"
+#include "stdlib.h"
 
 #define V_OPTION 'V'
 #define H_OPTION 'h'
@@ -9,6 +10,9 @@
 #define CACHE_OPTION 'c'
 #define BLOCK_OPTION 'b'
 #define SIZE_OPTION  's'
+
+#define INVALID_MESSAGE "Invalid option , use -h or --help to list valid commands\n"
+
 
 void show_help(){
   printf("Usage: \n \
@@ -26,11 +30,15 @@ void show_help(){
     tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
 }
 
+void show_invalid(){
+  printf(INVALID_MESSAGE);
+}
+
 int main(int argc, char **argv) {
   int c; 
   bool c_flag = false;
   bool b_flag = false;
-  char *cvalue = NULL;
+  //char *cvalue = NULL;
 
   int cache_size = 0;
   int block_size = 0;
@@ -43,32 +51,40 @@ int main(int argc, char **argv) {
       {"version", no_argument, 0, V_OPTION},
       {"help", no_argument, 0, H_OPTION},
       {"ways", no_argument, 0, W_OPTION},
-      {"cachesize", required_argument, 0, CACHE_OPTION},
-      {"blocksize", required_argument, 0, BLOCK_OPTION},
+      {"cache", no_argument, 0, CACHE_OPTION},
+      {"block", no_argument, 0, BLOCK_OPTION},
+      {"size", required_argument, 0, SIZE_OPTION},
       {"output", required_argument, 0, O_OPTION},
     };
 
-    c = getopt_long(argc, argv, "Vhw:cbs:o:", long_options, &option_index);
+    c = getopt_long(argc, argv, "cbVhw:s:o:", long_options, &option_index);
     if (c == -1)
       break;
 
     if ( c == V_OPTION ) {
 
-    } else if ( c == H_OPTION ) {
+    } else if (c == H_OPTION) {
       show_help();
-    } else if ( c == W_OPTION ) {
-
-    } else if ( c == CACHE_OPTION ) {
+    } else if (c == W_OPTION) {
+      ways = atoi(optarg);
+    } else if (c == CACHE_OPTION) {
       c_flag = true;
-    } else if ( c == BLOCK_OPTION ) {
+    } else if (c == BLOCK_OPTION) {
       b_flag = true;
-    } else if ( c == SIZE_OPTION ) {
-      if(c_flag || b_flag)
-        cvalue = optarg;
-    } else if ( c == O_OPTION ) {
+    } else if (c == SIZE_OPTION) {
+      if (c_flag) {
+        cache_size = atoi(optarg);
+        c_flag = false;
+      } else if (b_flag) {
+        block_size = atoi(optarg);
+        b_flag = false;
+      }
+    } else if (c == O_OPTION) {
       
+    } else {
+      show_invalid();
     }
   }
-
+  
   return 0;
 }
