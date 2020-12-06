@@ -3,8 +3,23 @@
 #include "stdint.h"
 /*Este modulo implementa una cache asociativa por conjuntos*/
 
-typedef struct cache cache_t;
-typedef struct block block_t;
+typedef struct block {
+  int tag;
+  int16_t *words;
+  char valid;
+  char dirty;
+  //para lru
+  char last_accessed;
+} block_t;
+
+typedef struct cache {
+  int ways;
+  int size;
+  int block_size;
+  int miss_rate;
+  int blocks_len;
+  block_t * blocks;
+} cache_t;
 
 
 /*Inicializa la cache */
@@ -25,6 +40,8 @@ char cache_read_byte(cache_t* self,int address);
 void cache_write_byte(cache_t* self,int address, char value);
 /* */
 int cache_get_miss_rate(cache_t* self);
+/**/
+int cache_amount_blocks(int cs,int bs);
 /*Destruye la cache */
 void cache_destroy(cache_t* self);
 

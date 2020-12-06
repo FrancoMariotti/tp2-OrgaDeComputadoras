@@ -17,26 +17,9 @@ int16_t memPrincipal[MAIN_MEMORY]; // Memoria principal de 64KB
 /* La via es un array de palabras y el numero de bloque 
  * dentro de la via queda determinado por el tamanio del bloque.
  */
-struct block {
-  int tag;
-  int16_t *words;
-  char valid;
-  char dirty;
-  //para lru
-  char last_accessed;
-};
-
-struct cache {
-  int ways;
-  int size;
-  int block_size;
-  int miss_rate;
-  int blocks_len;
-  block_t * blocks;
-};
 
 int cache_amount_blocks(int cs,int bs) {
-  return cs / bs;
+  return (cs * 1024) / bs;
 }
 
 static int block_init(block_t *block,int bs) { 
@@ -63,7 +46,7 @@ static void block_destroy(block_t *block) {
 
 static int get_bits(int num) {
   int bits;
-  for(bits = 0; (num >> 1) > 1; bits++) {}
+  for(bits = 0; (num = num >> 1) > 1; bits++) {}
   
   return bits;
 }
@@ -73,7 +56,7 @@ static int get_bits(int num) {
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   //inicializa la memoria en cero.
   memset(memPrincipal, 0, WORD_SIZE * MAIN_MEMORY);
-  self->blocks_len = cache_amount_blocks(self->size, self->block_size);
+  self->blocks_len = cache_amount_blocks(cs, bs);
 
   bool error = false;
 

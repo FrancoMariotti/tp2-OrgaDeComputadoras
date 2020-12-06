@@ -2,6 +2,7 @@
 #include "getopt.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include "cache.h"
 
 #define V_OPTION 'V'
 #define H_OPTION 'h'
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
     static struct option long_options[] = {
       {"version", no_argument, 0, V_OPTION},
       {"help", no_argument, 0, H_OPTION},
-      {"ways", no_argument, 0, W_OPTION},
+      {"ways", required_argument, 0, W_OPTION},
       {"cache", no_argument, 0, CACHE_OPTION},
       {"block", no_argument, 0, BLOCK_OPTION},
       {"size", required_argument, 0, SIZE_OPTION},
@@ -85,6 +86,17 @@ int main(int argc, char **argv) {
       show_invalid();
     }
   }
-  
+
+  printf( "Me piden un cache de size: %d y tamanio de bloque: %d y vias: %d\n", cache_size,block_size,ways);
+
+  cache_t cache;
+  int blocks_size = cache_amount_blocks(cache_size,block_size);
+  block_t blocks[blocks_size];
+
+  cache_init(&cache,blocks,ways,cache_size,block_size);
+
+  printf("Conjunto al que pertence address:%d\n",cache_find_set(&cache,0x0010));
+
+  cache_destroy(&cache);
   return 0;
 }
