@@ -3,7 +3,7 @@
 #include "string.h"
 #include "stdbool.h"
 
-#define MAIN_MEMORY 32768 //en cantidad de palabras
+#define MEMORY_SIZE 32768 //en cantidad de palabras
 #define WORD_SIZE 2 // cada palabra de 2 bytes
 
 #define VALID 1
@@ -12,7 +12,7 @@
 #define SUCCESS 0
 #define ERROR 1
 
-int16_t memPrincipal[MAIN_MEMORY]; // Memoria principal de 64KB
+int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
 
 /* La via es un array de palabras y el numero de bloque 
  * dentro de la via queda determinado por el tamanio del bloque.
@@ -51,11 +51,9 @@ static int get_bits(int num) {
   return bits;
 }
 
-/* Pre: La estructura cache fue inicializada
- */
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   //inicializa la memoria en cero.
-  memset(memPrincipal, 0, WORD_SIZE * MAIN_MEMORY);
+  memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
   self->blocks_len = cache_amount_blocks(cs, bs);
 
   bool error = false;
@@ -71,8 +69,8 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
     return ERROR;
   }
 
-  //incializo frecuencia de miss en cero.
   self->blocks = blocks;
+  self->ways = ways;
   self->miss_rate = 0;
   self->size = cs;
   self->block_size = bs;
@@ -81,10 +79,10 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
 }
 
 unsigned int cache_find_set(cache_t* self,uint16_t address) {
-  //address -> tag | index | offset
-  //index -> me determinan el conjunto 
   unsigned int bits_index = get_bits(self->blocks_len);
+  //bits_offset = F -> 2^F = block_size
   unsigned int bits_offset = get_bits(self->block_size);
+  //bits_tag = 16 bits - bits_index - bits_offset
   unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
 
   int index =  address >> bits_offset;
@@ -98,12 +96,17 @@ unsigned int cache_find_lru(cache_t* self,int setnum) {
 }
 
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
-  //chequear si el bit de dirty en el bloque esta en 1
+  if(way > self->ways) return -1;
+  
   int index = (setnum - 1) * self->ways - 1;
-  return self->blocks[index].dirty;
+  //dentro del conjunto se le suma la via
+  return self->blocks[index + way].dirty;
 }
 
 void cache_read_block(cache_t* self,int blocknum) {
+  //Aca hay que tener en cuenta la politica de reemplazo LRU
+
+  //cache[conjunto][via] = mainMemory[blocknum]
 
 }
 

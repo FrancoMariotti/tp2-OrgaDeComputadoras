@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
   cache_init(&cache,blocks,ways,cache_size,block_size);
 
   printf("Conjunto al que pertence address:%d\n",cache_find_set(&cache,0x0010));
-
+  printf("Conjunto is_dirty:%d\n",cache_is_dirty(&cache,2,cache_find_set(&cache,0x0010)));
   cache_destroy(&cache);
   return 0;
 }

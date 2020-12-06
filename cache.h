@@ -6,8 +6,8 @@
 typedef struct block {
   int tag;
   int16_t *words;
-  char valid;
-  char dirty;
+  char valid:1;
+  char dirty:1;
   //para lru
   char last_accessed;
 } block_t;
