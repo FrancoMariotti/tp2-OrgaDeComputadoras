@@ -90,7 +90,7 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   int amount_blocks = cache_amount_blocks(self->size, self->block_size);
   int bits_index = amount_bits(amount_blocks);
   int bits_offset = amount_bits(self->block_size);
-  int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
+  int bits_tag = sizeof(address) - bits_index - bits_offset;
 
   int index =  address >> bits_offset;
   index = (index << bits_offset) << bits_index;
@@ -103,7 +103,9 @@ unsigned int cache_find_lru(cache_t* self,int setnum) {
 }
 
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
-
+  //chequear si el bit de dirty en el bloque esta en 1
+  int index = (setnum - 1) * self->ways - 1;
+  return self->blocks[index].dirty;
 }
 
 void cache_read_block(cache_t* self,int blocknum) {
