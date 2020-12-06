@@ -23,8 +23,6 @@ void show_help(){
     tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
 }
 
-
-
 int main(int argc, char const *argv[]) {
   int c; 
   
