@@ -84,7 +84,7 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   return SUCCESS;
 }
 
-unsigned int cache_find_set(cache_t* self,int address) {
+unsigned int cache_find_set(cache_t* self,uint16_t address) {
   //address -> tag | index | offset
   //index -> me determinan el conjunto 
   int amount_blocks = cache_amount_blocks(self->size, self->block_size);
