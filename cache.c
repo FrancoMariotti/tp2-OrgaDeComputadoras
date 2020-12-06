@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "stdlib.h"
 #include "string.h"
+#include "stdbool.h"
 
 #define MAIN_MEMORY 32768 //en cantidad de palabras
 #define WORD_SIZE 2 // cada palabra de 2 bytes
@@ -30,6 +31,7 @@ struct cache {
   int size;
   int block_size;
   int miss_rate;
+  int blocks_len;
   block_t * blocks;
 };
 
@@ -37,9 +39,11 @@ int cache_amount_blocks(int cs,int bs) {
   return cs / bs;
 }
 
-static int initialize_block(block_t *block,int bs) { 
+static int block_init(block_t *block,int bs) { 
   block->words = (int16_t*) malloc(bs);
-  if(!block->words) return ERROR;
+  if(!block->words) {
+    return ERROR;
+  }
 
   block->dirty = 0;
   block->valid = INVALID;
@@ -47,21 +51,21 @@ static int initialize_block(block_t *block,int bs) {
   return SUCCESS;
 }
 
-static void blocks_destroy(block_t *blocks,int cs,int bs) {
-  int amount_blocks = cache_amount_blocks(cs,bs);
-  
-  for (int i=0; i < amount_blocks; i++) {
-    if(blocks[i].words) {
-      free(blocks[i].words);
-    }
+static void block_destroy(block_t *block) {
+  if(block->words) {
+    free(block->words);
   }
+  block->dirty = -1;
+  block->last_accessed = -1;
+  block->tag = -1;
+  block->valid = -1;
 }
 
-static int amount_bits(int num) {
-  int amount_bits;
-  for(amount_bits = 0; (amount_bits >> 1) > 1; amount_bits++) {}
+static int get_bits(int num) {
+  int bits;
+  for(bits = 0; (num >> 1) > 1; bits++) {}
   
-  return amount_bits;
+  return bits;
 }
 
 /* Pre: La estructura cache fue inicializada
@@ -69,15 +73,23 @@ static int amount_bits(int num) {
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   //inicializa la memoria en cero.
   memset(memPrincipal, 0, WORD_SIZE * MAIN_MEMORY);
+  self->blocks_len = cache_amount_blocks(self->size, self->block_size);
 
-  for (size_t i = 0; i < self->size; i++) {
-    if (initialize_block(self->blocks + i,bs)) {
-      blocks_destroy(self->blocks,cs,bs);
-      return ERROR;
+  bool error = false;
+
+  for (int i=0; i < self->blocks_len; i++) {
+    if (block_init(blocks + i,bs)) {
+      error = true;
     }
   }
- 
+
+  if(error) {
+    cache_destroy(self);
+    return ERROR;
+  }
+
   //incializo frecuencia de miss en cero.
+  self->blocks = blocks;
   self->miss_rate = 0;
   self->size = cs;
   self->block_size = bs;
@@ -88,13 +100,12 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
 unsigned int cache_find_set(cache_t* self,uint16_t address) {
   //address -> tag | index | offset
   //index -> me determinan el conjunto 
-  int amount_blocks = cache_amount_blocks(self->size, self->block_size);
-  unsigned int bits_index = amount_bits(amount_blocks);
-  unsigned int bits_offset = amount_bits(self->block_size);
+  unsigned int bits_index = get_bits(self->blocks_len);
+  unsigned int bits_offset = get_bits(self->block_size);
   unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
 
   int index =  address >> bits_offset;
-  index = (index << bits_offset) << bits_index;
+  index = (index << bits_offset) << bits_tag;
   
   return (index >> bits_tag);
 }
@@ -130,5 +141,7 @@ int cache_get_miss_rate(cache_t* self) {
 }
 
 void cache_destroy(cache_t* self) {
-  blocks_destroy(self->blocks,self->size,self->block_size);
+  for (int i=0; i < self->blocks_len; i++) {
+    block_destroy(self->blocks + i);
+  }
 }
