@@ -2,11 +2,10 @@ CC = gcc
 CFLAGS = -g -std=c99 -Wall -Wconversion -Wno-sign-conversion -Werror 
 VFLAGS = --leak-check=full --track-origins=yes --show-reachable=yes
 
-CFILES = main.c
-#HFILES =
+CFILES = main.c cache.c
+HFILES = cache.h
 
 TARGET = tp2
-GRUPO = G14
 
 build: $(CFILES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(CFILES)
@@ -21,7 +20,7 @@ gdb: build
 	gdb $(GDBFLAGS) ./$(EXEC_S)
 
 clean:
-	rm -f *.o $(EXEC_S)
+	rm -f *.o $(TARGET)
 
 zip:
 	zip $(GRUPO).zip $(CFILES) $(HFILES)

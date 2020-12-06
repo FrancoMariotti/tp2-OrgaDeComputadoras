@@ -1,5 +1,6 @@
 #include "cache.h"
 #include "stdlib.h"
+#include "string.h"
 
 #define MAIN_MEMORY 32768 //en cantidad de palabras
 #define WORD_SIZE 2 // cada palabra de 2 bytes
@@ -15,14 +16,14 @@ int16_t memPrincipal[MAIN_MEMORY]; // Memoria principal de 64KB
 /* La via es un array de palabras y el numero de bloque 
  * dentro de la via queda determinado por el tamanio del bloque.
  */
-typedef struct block {
+struct block {
   int tag;
   int16_t *words;
   char valid;
   char dirty;
   //para lru
   char last_accessed;
-} block_t;
+};
 
 struct cache {
   int ways;
@@ -58,9 +59,9 @@ static void blocks_destroy(block_t *blocks,int cs,int bs) {
 
 static int amount_bits(int num) {
   int amount_bits;
-  for(amount_bits = 0, (amount_bits >> 1) > 1; amount_bits++);
+  for(amount_bits = 0; (amount_bits >> 1) > 1; amount_bits++) {}
   
-  return amount_bits
+  return amount_bits;
 }
 
 /* Pre: La estructura cache fue inicializada
@@ -88,9 +89,9 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   //address -> tag | index | offset
   //index -> me determinan el conjunto 
   int amount_blocks = cache_amount_blocks(self->size, self->block_size);
-  int bits_index = amount_bits(amount_blocks);
-  int bits_offset = amount_bits(self->block_size);
-  int bits_tag = sizeof(address) - bits_index - bits_offset;
+  unsigned int bits_index = amount_bits(amount_blocks);
+  unsigned int bits_offset = amount_bits(self->block_size);
+  unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
 
   int index =  address >> bits_offset;
   index = (index << bits_offset) << bits_index;
@@ -99,7 +100,7 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
 }
 
 unsigned int cache_find_lru(cache_t* self,int setnum) {
-
+  return SUCCESS;
 }
 
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
@@ -117,7 +118,7 @@ void cache_write_block(cache_t* self,int way, int setnum) {
 }
 
 char cache_read_byte(cache_t* self,int address) {
-
+  return 'a';
 }
 
 void cache_write_byte(cache_t* self,int address, char value) {
