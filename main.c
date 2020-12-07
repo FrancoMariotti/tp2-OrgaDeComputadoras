@@ -14,7 +14,6 @@
 
 #define INVALID_MESSAGE "Invalid option , use -h or --help to list valid commands\n"
 
-
 void show_help(){
   printf("Usage: \n \
     tp2 -h \n \
@@ -33,6 +32,17 @@ void show_help(){
 
 void show_invalid(){
   printf(INVALID_MESSAGE);
+}
+
+void start_simulation(int cache_size,int block_size,int ways) {
+  cache_t cache;
+  int len_blocks = cache_get_blocks(cache_size,block_size);
+  block_t blocks[len_blocks];
+  cache_init(&cache,blocks,ways,cache_size,block_size);
+
+  cache_read_block(&cache,0);
+
+  cache_destroy(&cache);
 }
 
 int main(int argc, char **argv) {
@@ -87,14 +97,9 @@ int main(int argc, char **argv) {
     }
   }
 
-  printf( "Me piden un cache de size: %d y tamanio de bloque: %d y vias: %d\n", cache_size,block_size,ways);
+  if(cache_size && block_size && ways) {
+    start_simulation(cache_size,block_size,ways);
+  }
 
-  cache_t cache;
-  int len_blocks = cache_get_blocks(cache_size,block_size);
-  block_t blocks[len_blocks];
-
-  cache_init(&cache,blocks,ways,cache_size,block_size);
-
-  cache_destroy(&cache);
   return 0;
 }

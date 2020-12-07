@@ -1,13 +1,12 @@
 #ifndef __CACHE_H_
 #define __CACHE_H_
 #include "stdint.h"
-/*Este modulo implementa una cache asociativa por conjuntos*/
 
 typedef struct block {
   int tag;
   int16_t *words;
-  char valid:1;
-  char dirty:1;
+  unsigned char valid:1;
+  unsigned char dirty:1;
   //para lru
   char last_accessed;
 } block_t;

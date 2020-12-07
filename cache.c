@@ -9,6 +9,8 @@
 #define VALID 1
 #define INVALID 0
 
+#define LAST_ACCESSED 'l'
+
 #define SUCCESS 0
 #define ERROR 1
 
@@ -92,8 +94,26 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   return (index >> bits_tag);
 }
 
-static unsigned int find_lru(block_t *blocks,int setnum) {
-  return 1;
+static unsigned int find_lru(cache_t* self,int setnum) {
+  //bloques que me tengo que desplzar.
+  int offset = self->ways * setnum;
+  block_t* set = self->blocks + offset;
+
+  unsigned int way = 0;
+
+  for (unsigned int i = 0; i < self->ways; i++) {
+    if(!set[i].valid) return i;
+
+    if(set[i].last_accessed == LAST_ACCESSED) {
+      way = i;
+    }
+  }
+
+  return way;
+}
+
+static int find_set(cache_t* self,int blocknum) {
+  return blocknum % (self->blocks_len / self->ways);
 }
 
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
@@ -108,10 +128,11 @@ void cache_read_block(cache_t* self,int blocknum) {
   //Aca hay que tener en cuenta la politica de reemplazo LRU
   //cache[conjunto][via] = mainMemory[blocknum]
   //set = blocknum % sets
-  int set  = blocknum % (self->blocks_len / self->ways);
+  self->missed_accesses ++;
+  int setnum  = find_set(self,blocknum);
   //bloques que me tengo que desplzar.
-  int offset = self->ways * set;
-  int way = find_lru(self->blocks,set);
+  int offset = self->ways * setnum;
+  int way = find_lru(self,setnum);
 
   block_t* block = self->blocks + offset + way;
   block->valid = VALID;
@@ -120,21 +141,24 @@ void cache_read_block(cache_t* self,int blocknum) {
   memcpy(block->words, mainMemory + memory_offset , self->block_size);
 }
 
-void cache_write_block(cache_t* self,int way, int setnum) {
-
-}
-
 char cache_read_byte(cache_t* self,int address) {
+  //Aca se usa la funcion read_block en caso de haber un miss.
+  self->total_accesses ++;
+
   return 'a';
 }
 
-void cache_write_byte(cache_t* self,int address, char value) {
+void cache_write_block(cache_t* self,int way, int setnum) {
+  
+}
 
+void cache_write_byte(cache_t* self,int address, char value) {
+  //Para este hay que implementar WB/WA
 } 
 
 int cache_get_miss_rate(cache_t* self) {
   if(self->total_accesses) {
-    return self->missed_accesses / self->total_accesses
+    return self->missed_accesses / self->total_accesses;
   }
   return 0;
 }
