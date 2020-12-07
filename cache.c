@@ -9,7 +9,7 @@
 #define VALID 1
 #define INVALID 0
 
-#define LAST_ACCESSED 'l'
+#define LESS_RECENTLY_USED 'l'
 
 #define SUCCESS 0
 #define ERROR 1
@@ -48,7 +48,7 @@ static void block_destroy(block_t *block) {
 
 static int get_bits(int num) {
   int bits;
-  for(bits = 0; (num = num >> 1) > 1; bits++) {}
+  for(bits = 0; (num = num >> 1) >= 1; bits++) {}  
   
   return bits;
 }
@@ -61,7 +61,7 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   bool error = false;
 
   for (int i=0; i < self->blocks_len; i++) {
-    if (block_init(blocks + i,bs)) {
+    if (block_init(blocks + i,bs) == ERROR) {   
       error = true;
     }
   }
@@ -82,7 +82,7 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
 }
 
 unsigned int cache_find_set(cache_t* self,uint16_t address) {
-  unsigned int bits_index = get_bits(self->blocks_len);
+  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
   //bits_offset = F -> 2^F = block_size
   unsigned int bits_offset = get_bits(self->block_size);
   //bits_tag = 16 bits - bits_index - bits_offset
@@ -91,32 +91,34 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   int index =  address >> bits_offset;
   index = (index << bits_offset) << bits_tag;
   
-  return (index >> bits_tag);
+  return (index >> (bits_tag + bits_offset)); 
 }
 
 static unsigned int find_lru(cache_t* self,int setnum) {
   //bloques que me tengo que desplzar.
-  int offset = self->ways * setnum;
-  block_t* set = self->blocks + offset;
+  int set_offset = self->ways * setnum; 
+  block_t* set = self->blocks + set_offset;
 
   unsigned int way = 0;
 
   for (unsigned int i = 0; i < self->ways; i++) {
-    if(!set[i].valid) return i;
+    if(!set[i].valid) return i; 
 
-    if(set[i].last_accessed == LAST_ACCESSED) {
+    if(set[i].last_accessed == LESS_RECENTLY_USED) { 
       way = i;
     }
   }
 
-  return way;
+  return way; 
 }
 
 static int find_set(cache_t* self,int blocknum) {
   return blocknum % (self->blocks_len / self->ways);
 }
 
-unsigned int cache_is_dirty(cache_t* self,int way, int setnum) {
+
+//REVISARLO AL PROGRAMAR EL WRITE
+unsigned int cache_is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
   if(way > self->ways) return -1;
   
   int index = (setnum - 1) * self->ways - 1;
