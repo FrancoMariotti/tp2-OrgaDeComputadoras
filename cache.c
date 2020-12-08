@@ -92,6 +92,26 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   return (index >> (bits_tag + bits_offset)); 
 }
 
+//updatea distancia lru dentro del conjunto.
+static void update_lru_distance(cache_t* self, block_t* top, int setnum) {
+  int set_offset = self->ways * setnum; 
+  block_t* set = self->blocks + set_offset;
+
+  for (int i = 0; i < self->ways; i++) {
+    set[i].distance++;
+
+    /* esto es porque todos los bloques por debajo 
+     * de la referencia que se acaba de actualizar 
+     * van a quedar desplazados +1 luego de que se 
+     * iguale la distancia de top a 0
+    */
+    if(set + i > top) {
+      set[i].distance--;
+    }
+  }
+  top->distance = 0;
+}
+
 static unsigned int find_lru(cache_t* self,int setnum) {
   //bloques que me tengo que desplzar.
   int set_offset = self->ways * setnum; 
