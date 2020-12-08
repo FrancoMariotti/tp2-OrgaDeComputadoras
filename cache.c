@@ -100,6 +100,7 @@ static void update_lru_distance(cache_t* self, block_t* being_used, int setnum) 
   for (int i = 0; i < self->ways; i++) {
     if (set[i].distance < being_used->distance) {
       set[i].distance++;
+    }
   }
   being_used->distance = 0;
 }
