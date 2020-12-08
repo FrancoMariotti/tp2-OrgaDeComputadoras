@@ -93,18 +93,15 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
 }
 
 //updatea distancia lru dentro del conjunto.
-static void update_lru_distance(cache_t* self, block_t* top, int setnum) {
+static void update_lru_distance(cache_t* self, block_t* being_used, int setnum) {
   int set_offset = self->ways * setnum; 
   block_t* set = self->blocks + set_offset;
 
   for (int i = 0; i < self->ways; i++) {
-    set[i].distance++;
- 
-    if(set + i > top) {
-      break;
-    }
+    if (set[i].distance < being_used->distance) {
+      set[i].distance++;
   }
-  top->distance = 0;
+  being_used->distance = 0;
 }
 
 static unsigned int find_lru(cache_t* self,int setnum) {
@@ -159,8 +156,12 @@ void cache_read_block(cache_t* self,int blocknum) {
 char cache_read_byte(cache_t* self,int address) {
   //Aca se usa la funcion read_block en caso de haber un miss.
   self->total_accesses ++;
-  //Aca se modifica las distancia lru.
-  //y se le suma 1 a todas las demas distancias.
+  //Para esta funcion hay que primero buscar el 
+  //bloque que queremos si lo encontramos leemos 
+  //el byte correspondiente y listo. En caso de 
+  //no estar hay que traer el bloque de la memoria 
+  //(esto modifica el miss rate)y leer el byte
+  //y finalmente updatear distancias lru.
 
   return 'a';
 }
