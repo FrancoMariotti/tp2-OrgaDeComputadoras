@@ -32,7 +32,7 @@ static int block_init(block_t *block,int bs) {
 
   block->dirty = 0;
   block->valid = INVALID;
-  block->last_accessed = 0;
+  block->distance = 0;
   return SUCCESS;
 }
 
@@ -41,7 +41,7 @@ static void block_destroy(block_t *block) {
     free(block->words);
   }
   block->dirty = -1;
-  block->last_accessed = -1;
+  block->distance = -1;
   block->tag = -1;
   block->valid = -1;
 }
@@ -104,7 +104,7 @@ static unsigned int find_lru(cache_t* self,int setnum) {
   for (unsigned int i = 0; i < self->ways; i++) {
     if(!set[i].valid) return i; 
 
-    if(set[i].last_accessed == LESS_RECENTLY_USED) { 
+    if(set[i].distance > set[way].distance) { 
       way = i;
     }
   }
@@ -146,6 +146,8 @@ void cache_read_block(cache_t* self,int blocknum) {
 char cache_read_byte(cache_t* self,int address) {
   //Aca se usa la funcion read_block en caso de haber un miss.
   self->total_accesses ++;
+  //Aca se modifica las distancia lru.
+  //y se le suma 1 a todas las demas distancias.
 
   return 'a';
 }

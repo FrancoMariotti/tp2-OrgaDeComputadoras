@@ -8,7 +8,7 @@ typedef struct block {
   unsigned char valid:1;
   unsigned char dirty:1;
   //para lru
-  char last_accessed;
+  int distance;
 } block_t;
 
 typedef struct cache {
