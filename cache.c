@@ -9,8 +9,6 @@
 #define VALID 1
 #define INVALID 0
 
-#define LESS_RECENTLY_USED 'l'
-
 #define SUCCESS 0
 #define ERROR 1
 
