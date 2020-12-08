@@ -99,14 +99,9 @@ static void update_lru_distance(cache_t* self, block_t* top, int setnum) {
 
   for (int i = 0; i < self->ways; i++) {
     set[i].distance++;
-
-    /* esto es porque todos los bloques por debajo 
-     * de la referencia que se acaba de actualizar 
-     * van a quedar desplazados +1 luego de que se 
-     * iguale la distancia de top a 0
-    */
+ 
     if(set + i > top) {
-      set[i].distance--;
+      break;
     }
   }
   top->distance = 0;
