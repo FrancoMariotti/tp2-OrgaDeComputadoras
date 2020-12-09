@@ -48,15 +48,9 @@ static int get_bits(int num) {
 }
 
 static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
-  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  //bits_offset = F -> 2^F = block_size
-  unsigned int bits_offset = get_bits(self->block_size);
-  //bits_tag = 16 bits - bits_index - bits_offset
-  unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
-
-  int index =  address >> bits_offset;
-  index = index << (bits_offset + bits_tag);
-  index = index >> (bits_tag + bits_offset)
+  int index =  address >> self->bits_offset;
+  index = index << (self->bits_offset + self->bits_tag);
+  index = index >> (self->bits_tag + self->bits_offset)
   
   return index; 
 }
@@ -68,26 +62,15 @@ static int find_set_by_blocknum(cache_t* self,int blocknum) {
 }
 
 static unsigned int find_offset_by_addr(cache_t* self,uint16_t address) {
-  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  //bits_offset = F -> 2^F = block_size
-  unsigned int bits_offset = get_bits(self->block_size);
-  //bits_tag = 16 bits - bits_index - bits_offset
-  unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
-
-  int offset =  address << (bits_tag + bits_index);
-  offset = offset >> (bits_tag + bits_index);
+  int offset =  address << (self->bits_tag + self->bits_index);
+  offset = offset >> (self->bits_tag + self->bits_index);
   
   return offset; 
 }
 
-static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) {
-  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  //bits_offset = F -> 2^F = block_size
-  unsigned int bits_offset = get_bits(self->block_size);
-  
-  return (address >> (bits_index + bits_offset)); 
+static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) { 
+  return (address >> (self->bits_index + self->bits_offset)); 
 }
-
 
 //updatea distancia lru dentro del conjunto.
 static void update_lru_distance(cache_t* self, block_t* being_used, int setnum) {
@@ -146,6 +129,10 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
   self->missed_accesses = 0;
   self->size = cs;
   self->block_size = bs;
+
+  self->bits_offset = get_bits(self->blocks_len / self->ways);
+  self->bits_index = get_bits(self->block_size);
+  self->bits_tag = WORD_SIZE * 8 - self->bits_index - self->bits_offset;
 
   return SUCCESS;
 }

@@ -15,6 +15,9 @@ typedef struct cache {
   int ways;
   int size;
   int block_size;
+  int bits_offset;
+  int bits_index;
+  int bits_tag;
   int total_accesses;
   int missed_accesses;
   int blocks_len;
