@@ -23,8 +23,6 @@ typedef struct cache {
 
 /*Inicializa la cache */
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs);
-/*Determina el estado del bit D del bloque pasado por parametro  */
-unsigned int cache_is_dirty(cache_t* self,int way, int setnum);
 /* */
 char cache_read_byte(cache_t* self,int address);
 /* */

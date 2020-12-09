@@ -61,9 +61,10 @@ static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
   unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
 
   int index =  address >> bits_offset;
-  index = (index << bits_offset) << bits_tag;
+  index = index << (bits_offset + bits_tag);
+  index = index >> (bits_tag + bits_offset)
   
-  return (index >> (bits_tag + bits_offset)); 
+  return index; 
 }
 
 static unsigned int find_block_by_addr(cache_t* self,uint16_t address) {
@@ -71,8 +72,31 @@ static unsigned int find_block_by_addr(cache_t* self,uint16_t address) {
   //bits_offset = F -> 2^F = block_size
   unsigned int bits_offset = get_bits(self->block_size);
   
+  return address >> (bits_index + bits_offset); 
+}
+
+static unsigned int find_offset_by_addr(cache_t* self,uint16_t address) {
+  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
+  //bits_offset = F -> 2^F = block_size
+  unsigned int bits_offset = get_bits(self->block_size);
+
+  //bits_tag = 16 bits - bits_index - bits_offset
+  unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
+
+  int offset =  address << (bits_tag + bits_index);
+  offset = offset >> (bits_tag + bits_index);
+  
+  return offset; 
+}
+
+static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) {
+  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
+  //bits_offset = F -> 2^F = block_size
+  unsigned int bits_offset = get_bits(self->block_size);
+  
   return (address >> (bits_index + bits_offset)); 
 }
+
 
 //updatea distancia lru dentro del conjunto.
 static void update_lru_distance(cache_t* self, block_t* being_used, int setnum) {
@@ -93,7 +117,7 @@ static unsigned int find_lru(cache_t* self,int setnum) {
   unsigned int way = 0;
 
   for (unsigned int i = 0; i < self->ways; i++) {
-    if(!set[i].valid) return i; 
+    if(set[i].valid == INVALID) return i; 
 
     if(set[i].distance > set[way].distance) { 
       way = i;
@@ -144,21 +168,24 @@ unsigned int cache_is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR M
   return self->blocks[index + way].dirty;
 }
 
-void cache_read_block(cache_t* self,int blocknum) {
+static void read_block(cache_t* self,int blocknum) {
   //Aca hay que tener en cuenta la politica de reemplazo LRU
   //cache[conjunto][via] = mainMemory[blocknum]
   //set = blocknum % sets
   self->missed_accesses ++;
   int setnum  = find_set_by_blocknum(self,blocknum);
   //bloques que me tengo que desplzar.
-  int offset = self->ways * setnum;
+  int set_offset = self->ways * setnum;
   int way = find_lru(self,setnum);
 
-  block_t* block = self->blocks + offset + way;
+  block_t* block = self->blocks + set_offset + way;
   block->valid = VALID;
   //copio el bloque a la cache en el conjunto correspondiente.
   int memory_offset = blocknum * self->block_size / WORD_SIZE;
-  memcpy(block->words, mainMemory + memory_offset , self->block_size);
+  memcpy(block->words, mainMemory + memory_offset , self->block_size);  
+
+  //copio el tag a la memoria.
+  block->tag = find_tag_by_addr(mainMemory + memory_offset);
 }
 
 char cache_read_byte(cache_t* self,uint16_t address) {
@@ -178,15 +205,20 @@ char cache_read_byte(cache_t* self,uint16_t address) {
 
   block_t* set = self->blocks + offset + way;
   block_t* block = NULL;
-  unsigned int tag = get_tag_by_addr(address);
+  unsigned int tag = find_tag_by_addr(address);
   
+  bool found = false;
   for (int i=0; i < self->ways; i++) {  
-    if(set[i].tag == tag) {
+    if(set[i].tag == tag && set[i].valid == VALID) {
       //se encontro el bloque en la cache.
+      //aca hay que leer el bloque teniendo en cuenta el offset.
     }
   }
 
   //hay que buscar el bloque en memoria.
+  if(!found) {
+    read_block(self,);
+  }
 
   update_lru_distance(self,block,setnum);
 
