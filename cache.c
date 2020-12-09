@@ -18,8 +18,10 @@ int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
  * dentro de la via queda determinado por el tamanio del bloque.
  */
 
-int cache_get_blocks(int cs,int bs) {
-  return (cs * 1024) / bs;
+static int find_set_by_blocknum(cache_t* self,int blocknum) {
+  if(!self->ways) return -1;
+
+  return blocknum % (self->blocks_len / self->ways);
 }
 
 static int block_init(block_t *block,int bs) { 
@@ -51,35 +53,7 @@ static int get_bits(int num) {
   return bits;
 }
 
-int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
-  //inicializa la memoria en cero.
-  memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
-  self->blocks_len = cache_get_blocks(cs, bs);
-
-  bool error = false;
-
-  for (int i=0; i < self->blocks_len; i++) {
-    if (block_init(blocks + i,bs) == ERROR) {   
-      error = true;
-    }
-  }
-
-  if(error) {
-    cache_destroy(self);
-    return ERROR;
-  }
-
-  self->blocks = blocks;
-  self->ways = ways;
-  self->total_accesses = 0;
-  self->missed_accesses = 0;
-  self->size = cs;
-  self->block_size = bs;
-
-  return SUCCESS;
-}
-
-unsigned int cache_find_set(cache_t* self,uint16_t address) {
+static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
   unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
   //bits_offset = F -> 2^F = block_size
   unsigned int bits_offset = get_bits(self->block_size);
@@ -90,6 +64,14 @@ unsigned int cache_find_set(cache_t* self,uint16_t address) {
   index = (index << bits_offset) << bits_tag;
   
   return (index >> (bits_tag + bits_offset)); 
+}
+
+static unsigned int find_block_by_addr(cache_t* self,uint16_t address) {
+  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
+  //bits_offset = F -> 2^F = block_size
+  unsigned int bits_offset = get_bits(self->block_size);
+  
+  return (address >> (bits_index + bits_offset)); 
 }
 
 //updatea distancia lru dentro del conjunto.
@@ -121,10 +103,37 @@ static unsigned int find_lru(cache_t* self,int setnum) {
   return way; 
 }
 
-static int find_set(cache_t* self,int blocknum) {
-  return blocknum % (self->blocks_len / self->ways);
+int cache_get_blocks(int cs,int bs) {
+  return (cs * 1024) / bs;
 }
 
+int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
+  //inicializa la memoria en cero.
+  memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
+  self->blocks_len = cache_get_blocks(cs, bs);
+
+  bool error = false;
+
+  for (int i=0; i < self->blocks_len; i++) {
+    if (block_init(blocks + i,bs) == ERROR) {   
+      error = true;
+    }
+  }
+
+  if(error) {
+    cache_destroy(self);
+    return ERROR;
+  }
+
+  self->blocks = blocks;
+  self->ways = ways;
+  self->total_accesses = 0;
+  self->missed_accesses = 0;
+  self->size = cs;
+  self->block_size = bs;
+
+  return SUCCESS;
+}
 
 //REVISARLO AL PROGRAMAR EL WRITE
 unsigned int cache_is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
@@ -140,7 +149,7 @@ void cache_read_block(cache_t* self,int blocknum) {
   //cache[conjunto][via] = mainMemory[blocknum]
   //set = blocknum % sets
   self->missed_accesses ++;
-  int setnum  = find_set(self,blocknum);
+  int setnum  = find_set_by_blocknum(self,blocknum);
   //bloques que me tengo que desplzar.
   int offset = self->ways * setnum;
   int way = find_lru(self,setnum);
@@ -152,15 +161,34 @@ void cache_read_block(cache_t* self,int blocknum) {
   memcpy(block->words, mainMemory + memory_offset , self->block_size);
 }
 
-char cache_read_byte(cache_t* self,int address) {
+char cache_read_byte(cache_t* self,uint16_t address) {
   //Aca se usa la funcion read_block en caso de haber un miss.
   self->total_accesses ++;
   //Para esta funcion hay que primero buscar el 
-  //bloque que queremos si lo encontramos leemos 
+  //bloque que queremos, si lo encontramos leemos 
   //el byte correspondiente y listo. En caso de 
   //no estar hay que traer el bloque de la memoria 
   //(esto modifica el miss rate)y leer el byte
   //y finalmente updatear distancias lru.
+  unsigned int setnum = find_set_by_addr(self,address);
+  
+  //bloques que me tengo que desplzar.
+  int offset = self->ways * setnum;
+  int way = find_lru(self,setnum);
+
+  block_t* set = self->blocks + offset + way;
+  block_t* block = NULL;
+  unsigned int tag = get_tag_by_addr(address);
+  
+  for (int i=0; i < self->ways; i++) {  
+    if(set[i].tag == tag) {
+      //se encontro el bloque en la cache.
+    }
+  }
+
+  //hay que buscar el bloque en memoria.
+
+  update_lru_distance(self,block,setnum);
 
   return 'a';
 }
@@ -169,7 +197,7 @@ void cache_write_block(cache_t* self,int way, int setnum) {
   
 }
 
-void cache_write_byte(cache_t* self,int address, char value) {
+void cache_write_byte(cache_t* self,uint16_t address, char value) {
   //Para este hay que implementar WB/WA
 } 
 
