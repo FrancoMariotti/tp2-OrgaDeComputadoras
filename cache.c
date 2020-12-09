@@ -18,12 +18,6 @@ int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
  * dentro de la via queda determinado por el tamanio del bloque.
  */
 
-static int find_set_by_blocknum(cache_t* self,int blocknum) {
-  if(!self->ways) return -1;
-
-  return blocknum % (self->blocks_len / self->ways);
-}
-
 static int block_init(block_t *block,int bs) { 
   block->words = (int16_t*) malloc(bs);
   if(!block->words) {
@@ -67,19 +61,16 @@ static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
   return index; 
 }
 
-static unsigned int find_block_by_addr(cache_t* self,uint16_t address) {
-  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  //bits_offset = F -> 2^F = block_size
-  unsigned int bits_offset = get_bits(self->block_size);
-  
-  return address >> (bits_index + bits_offset); 
+static int find_set_by_blocknum(cache_t* self,int blocknum) {
+  if(!self->ways) return -1;
+
+  return blocknum % (self->blocks_len / self->ways);
 }
 
 static unsigned int find_offset_by_addr(cache_t* self,uint16_t address) {
   unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
   //bits_offset = F -> 2^F = block_size
   unsigned int bits_offset = get_bits(self->block_size);
-
   //bits_tag = 16 bits - bits_index - bits_offset
   unsigned int bits_tag = WORD_SIZE * 8 - bits_index - bits_offset;
 
