@@ -3,6 +3,8 @@
 #include "string.h"
 #include "stdbool.h"
 
+#define UPPER_BYTE 0
+
 #define MEMORY_SIZE 32768 //en cantidad de palabras
 #define WORD_SIZE 2 // cada palabra de 2 bytes
 
