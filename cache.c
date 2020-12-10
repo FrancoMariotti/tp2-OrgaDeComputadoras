@@ -52,7 +52,7 @@ static int get_bits(int num) {
 static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
   int index =  address >> self->bits_offset;
   index = index << (self->bits_offset + self->bits_tag);
-  index = index >> (self->bits_tag + self->bits_offset)
+  index = index >> (self->bits_tag + self->bits_offset);
   
   return index; 
 }
@@ -161,11 +161,12 @@ static void read_block(cache_t* self,int blocknum) {
   block_t* block = self->blocks + set_offset + way;
   block->valid = VALID;
   //copio el bloque a la cache en el conjunto correspondiente.
-  int memory_offset = blocknum * self->block_size / WORD_SIZE;
+  int memory_offset =  blocknum * self->block_size / WORD_SIZE;
   memcpy(block->words, mainMemory + memory_offset , self->block_size);  
 
-  //copio el tag a la memoria.
-  block->tag = find_tag_by_addr(mainMemory + memory_offset);
+  //copio el tag del bloque.
+  uint16_t block_address = (uint16_t)(blocknum * self->block_size);
+  block->tag = find_tag_by_addr(self,block_address);
 }
 
 char cache_read_byte(cache_t* self,uint16_t address) {
@@ -183,18 +184,19 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   int set_offset = self->ways * setnum;
   int way = find_lru(self,setnum);
 
-  block_t* set = self->blocks + offset + way;
+  block_t* set = self->blocks + set_offset + way;
   block_t* block = NULL;
-  unsigned int tag = find_tag_by_addr(address);
+  unsigned int tag = find_tag_by_addr(self,address);
 
   unsigned int block_offset = find_offset_by_addr(self,address);
   int word_offset = block_offset / WORD_SIZE;
   int byte_offset = block_offset % WORD_SIZE;
+  int blocknum = address / self->block_size;
   char data = 0;
   bool found = false;
 
   for (int i=0; i < self->ways; i++) {
-    block = set[i];
+    block = set + i;
     if(block->tag == tag && block->valid == VALID) {
       //se encontro el bloque en la cache.
       //aca hay que leer el bloque teniendo en cuenta el offset.
@@ -202,25 +204,25 @@ char cache_read_byte(cache_t* self,uint16_t address) {
       int16_t word = *(block->words + word_offset);
 
       if (byte_offset == UPPER_BYTE) {
-        data = word & 0xFF00;
+        data =  word >> 8;
       } else {
-        data = word & 0x00FF;
+        data =  word & 0xFF;
       }
     }
   }
 
   //hay que buscar el bloque en memoria.
-  if(!found) {
-    read_block(self,);
+  if (!found) {
+    read_block(self,blocknum);
     for (int i=0; i < self->ways; i++) {
-      block = set[i];
+      block = set + i;
       if(block->tag == tag) {
         int16_t word = *(block->words + word_offset);
 
         if (byte_offset == UPPER_BYTE) {
-          data = word & 0xFF00;
+          data = word >> 8;
         } else {
-          data = word & 0x00FF;
+          data = word & 0xFF;
         }
       }
     }
@@ -231,8 +233,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   return data;
 }
 
-void cache_write_block(cache_t* self,int way, int setnum) {
-  
+static void write_block(cache_t* self,int way, int setnum) {
 }
 
 void cache_write_byte(cache_t* self,uint16_t address, char value) {

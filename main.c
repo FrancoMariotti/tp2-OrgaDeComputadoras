@@ -39,8 +39,6 @@ void start_simulation(int cache_size,int block_size,int ways) {
   block_t blocks[len_blocks];
   cache_init(&cache,blocks,ways,cache_size,block_size);
 
-  cache_read_block(&cache,0);
-
   cache_destroy(&cache);
 }
 
@@ -60,7 +58,6 @@ int main(int argc, char **argv) {
       {"ways", required_argument, 0, W_OPTION},
       {"cachesize", no_argument, 0, CACHE_OPTION},
       {"blocksize", no_argument, 0, BLOCK_OPTION},
-      {"size", required_argument, 0, SIZE_OPTION},
       {"output", required_argument, 0, O_OPTION},
     };
 

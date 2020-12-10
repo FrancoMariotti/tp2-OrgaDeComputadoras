@@ -27,9 +27,9 @@ typedef struct cache {
 /*Inicializa la cache */
 int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs);
 /* */
-char cache_read_byte(cache_t* self,int address);
+char cache_read_byte(cache_t* self,uint16_t address);
 /* */
-void cache_write_byte(cache_t* self,int address, char value);
+void cache_write_byte(cache_t* self,uint16_t address, char value);
 /* */
 int cache_get_miss_rate(cache_t* self);
 /**/
