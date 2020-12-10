@@ -10,7 +10,6 @@
 #define W_OPTION 'w'
 #define CACHE_OPTION 'c'
 #define BLOCK_OPTION 'b'
-#define SIZE_OPTION  's'
 
 #define INVALID_MESSAGE "Invalid option , use -h or --help to list valid commands\n"
 
@@ -47,9 +46,6 @@ void start_simulation(int cache_size,int block_size,int ways) {
 
 int main(int argc, char **argv) {
   int c; 
-  bool c_flag = false;
-  bool b_flag = false;
-  //char *cvalue = NULL;
 
   int cache_size = 0;
   int block_size = 0;
@@ -62,13 +58,13 @@ int main(int argc, char **argv) {
       {"version", no_argument, 0, V_OPTION},
       {"help", no_argument, 0, H_OPTION},
       {"ways", required_argument, 0, W_OPTION},
-      {"cache", no_argument, 0, CACHE_OPTION},
-      {"block", no_argument, 0, BLOCK_OPTION},
+      {"cachesize", no_argument, 0, CACHE_OPTION},
+      {"blocksize", no_argument, 0, BLOCK_OPTION},
       {"size", required_argument, 0, SIZE_OPTION},
       {"output", required_argument, 0, O_OPTION},
     };
 
-    c = getopt_long(argc, argv, "cbVhw:s:o:", long_options, &option_index);
+    c = getopt_long(argc, argv, "c:b:Vhw:o:", long_options, &option_index);
     if (c == -1)
       break;
 
@@ -79,17 +75,9 @@ int main(int argc, char **argv) {
     } else if (c == W_OPTION) {
       ways = atoi(optarg);
     } else if (c == CACHE_OPTION) {
-      c_flag = true;
+      cache_size = atoi(optarg);
     } else if (c == BLOCK_OPTION) {
-      b_flag = true;
-    } else if (c == SIZE_OPTION) {
-      if (c_flag) {
-        cache_size = atoi(optarg);
-        c_flag = false;
-      } else if (b_flag) {
-        block_size = atoi(optarg);
-        b_flag = false;
-      }
+      block_size = atoi(optarg);
     } else if (c == O_OPTION) {
       
     } else {
