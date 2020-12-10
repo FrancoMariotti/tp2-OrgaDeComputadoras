@@ -124,7 +124,7 @@ unsigned int cache_is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR M
   return self->blocks[index + way].dirty;
 }
 
-void cache_read_block(cache_t* self,int blocknum) {
+void cache_read_block(cache_t* self, int blocknum) {
   //Aca hay que tener en cuenta la politica de reemplazo LRU
   //cache[conjunto][via] = mainMemory[blocknum]
   //set = blocknum % sets
@@ -149,9 +149,28 @@ char cache_read_byte(cache_t* self,int address) {
 
   return 'a';
 }
+/* debe escribir en memoria los datos contenidos en el bloque setnum de la via way */
+// way 2 setnum 3
+// 0-3 4-7 8-11 
+void cache_write_block(cache_t* self, int way, int setnum) {
+  /* Obtenemos el contenido de la cache */
+  block_t block = self->blocks[(setnum - 1) * self->ways + (way - 1)];
 
-void cache_write_block(cache_t* self,int way, int setnum) {
-  
+  if (!block.valid) return ERROR;
+
+  int16_t *words_to_write = block.words;
+
+  int address = block.tag;
+  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
+  unsigned int bits_offset = get_bits(self->block_size);
+
+  address = address << (bits_index + bits_offset); 
+  address += (setnum << bits_offset);
+  // deberíamos marcarlo como accedido (VER LRU)
+
+  int block_offset = setnum * self->ways + (way - 1);
+
+  memcpy(address, words_to_write, self->block_size);
 }
 
 void cache_write_byte(cache_t* self,int address, char value) {
