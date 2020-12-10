@@ -18,8 +18,8 @@ int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
  * dentro de la via queda determinado por el tamanio del bloque.
  */
 
-static int block_init(block_t *block,int bs) { 
-  block->words = (int16_t*) malloc(bs);
+static int block_init(block_t *block,int bs) {
+  block->words = malloc(sizeof(int16_t) * (bs / WORD_SIZE));
   if(!block->words) {
     return ERROR;
   }
@@ -178,7 +178,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   unsigned int setnum = find_set_by_addr(self,address);
   
   //bloques que me tengo que desplzar.
-  int offset = self->ways * setnum;
+  int set_offset = self->ways * setnum;
   int way = find_lru(self,setnum);
 
   block_t* set = self->blocks + offset + way;
@@ -186,10 +186,15 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   unsigned int tag = find_tag_by_addr(address);
   
   bool found = false;
-  for (int i=0; i < self->ways; i++) {  
-    if(set[i].tag == tag && set[i].valid == VALID) {
+  for (int i=0; i < self->ways; i++) {
+    block = set[i];
+    if(block->tag == tag && block->valid == VALID) {
       //se encontro el bloque en la cache.
       //aca hay que leer el bloque teniendo en cuenta el offset.
+      unsigned int block_offset = find_offset_by_addr(self,address);
+      int16_t data = *(block->words + block_offset);
+
+      return 
     }
   }
 
