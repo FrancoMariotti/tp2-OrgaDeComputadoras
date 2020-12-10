@@ -138,7 +138,7 @@ int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
 }
 
 //REVISARLO AL PROGRAMAR EL WRITE
-unsigned int cache_is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
+unsigned int is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
   if(way > self->ways) return -1;
   
   int index = (setnum - 1) * self->ways - 1;
@@ -192,9 +192,15 @@ char cache_read_byte(cache_t* self,uint16_t address) {
       //se encontro el bloque en la cache.
       //aca hay que leer el bloque teniendo en cuenta el offset.
       unsigned int block_offset = find_offset_by_addr(self,address);
-      int16_t data = *(block->words + block_offset);
+      int word_offset = block_offset / WORD_SIZE;
+      int byte_offset = block_offset % WORD_SIZE;
 
-      return 
+      int16_t data = *(block->words + word_offset);
+
+      if (byte_offset == UPPER_BYTE) {
+        return data & 0xFF00;
+      }
+      return data & 0x00FF;
     }
   }
 
