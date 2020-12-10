@@ -186,34 +186,49 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   block_t* set = self->blocks + offset + way;
   block_t* block = NULL;
   unsigned int tag = find_tag_by_addr(address);
-  
+
+  unsigned int block_offset = find_offset_by_addr(self,address);
+  int word_offset = block_offset / WORD_SIZE;
+  int byte_offset = block_offset % WORD_SIZE;
+  char data = 0;
   bool found = false;
+
   for (int i=0; i < self->ways; i++) {
     block = set[i];
     if(block->tag == tag && block->valid == VALID) {
       //se encontro el bloque en la cache.
       //aca hay que leer el bloque teniendo en cuenta el offset.
-      unsigned int block_offset = find_offset_by_addr(self,address);
-      int word_offset = block_offset / WORD_SIZE;
-      int byte_offset = block_offset % WORD_SIZE;
-
-      int16_t data = *(block->words + word_offset);
+      found = true;
+      int16_t word = *(block->words + word_offset);
 
       if (byte_offset == UPPER_BYTE) {
-        return data & 0xFF00;
+        data = word & 0xFF00;
+      } else {
+        data = word & 0x00FF;
       }
-      return data & 0x00FF;
     }
   }
 
   //hay que buscar el bloque en memoria.
   if(!found) {
     read_block(self,);
+    for (int i=0; i < self->ways; i++) {
+      block = set[i];
+      if(block->tag == tag) {
+        int16_t word = *(block->words + word_offset);
+
+        if (byte_offset == UPPER_BYTE) {
+          data = word & 0xFF00;
+        } else {
+          data = word & 0x00FF;
+        }
+      }
+    }
   }
 
   update_lru_distance(self,block,setnum);
 
-  return 'a';
+  return data;
 }
 
 void cache_write_block(cache_t* self,int way, int setnum) {
