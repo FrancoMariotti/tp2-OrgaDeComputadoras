@@ -244,11 +244,11 @@ void cache_write_block(cache_t* self, int way, int setnum) {
   int16_t *words_to_write = block.words;
 
   int address = block.tag;
-  unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  unsigned int bits_offset = get_bits(self->block_size);
+  //unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
+  //unsigned int bits_offset = get_bits(self->block_size);
 
-  address = address << (bits_index + bits_offset); 
-  address += (setnum << bits_offset);
+  address = address << (self->bits_index + self->bits_offset); 
+  address += (setnum << self->bits_offset);
   // deberíamos marcarlo como accedido (VER LRU)
 
   int block_offset = setnum * self->ways + (way - 1);
