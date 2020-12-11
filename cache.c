@@ -235,7 +235,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
 /* debe escribir en memoria los datos contenidos en el bloque setnum de la via way */
 // way 2 setnum 3
 // 0-3 4-7 8-11 
-void cache_write_block(cache_t* self, int way, int setnum) {
+static void write_block(cache_t* self, int way, int setnum) {
   /* Obtenemos el contenido de la cache */
   block_t block = self->blocks[(setnum - 1) * self->ways + (way - 1)];
 
@@ -244,8 +244,6 @@ void cache_write_block(cache_t* self, int way, int setnum) {
   int16_t *words_to_write = block.words;
 
   int address = block.tag;
-  //unsigned int bits_index = get_bits(self->blocks_len / self->ways); 
-  //unsigned int bits_offset = get_bits(self->block_size);
 
   address = address << (self->bits_index + self->bits_offset); 
   address += (setnum << self->bits_offset);
