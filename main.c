@@ -92,5 +92,7 @@ int main(int argc, char **argv) {
     start_simulation(cache_size,block_size,ways);
   }
 
+
+
   return 0;
 }
