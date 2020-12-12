@@ -16,6 +16,11 @@
 
 int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
 
+
+/* ******************************************************************
+ *                        FUNCIONES PRIVADAS
+ * *****************************************************************/
+
 /* La via es un array de palabras y el numero de bloque 
  * dentro de la via queda determinado por el tamanio del bloque.
  */
@@ -102,6 +107,12 @@ static unsigned int find_lru(cache_t* self,int setnum) {
 
   return way; 
 }
+
+
+
+/* ******************************************************************
+ *                        PRIMITIVAS CACHE
+ * *****************************************************************/
 
 int cache_get_blocks(int cs,int bs) {
   return (cs * 1024) / bs;

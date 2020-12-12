@@ -38,6 +38,12 @@ void start_simulation(int cache_size,int block_size,int ways) {
   int len_blocks = cache_get_blocks(cache_size,block_size);
   block_t blocks[len_blocks];
   cache_init(&cache,blocks,ways,cache_size,block_size);
+  /* para parsear las instrucciones.
+   * esto sumado a getline me permiten
+   * leer las instrucciones y separar
+   * la instruccion de los parametros.
+   */
+  sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
 
   cache_destroy(&cache);
 }
