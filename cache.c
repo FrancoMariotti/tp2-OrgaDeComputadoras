@@ -4,8 +4,6 @@
 #include "stdbool.h"
 
 #define UPPER_BYTE 0
-
-#define MEMORY_SIZE 32768 //en cantidad de palabras
 #define WORD_SIZE 2 // cada palabra de 2 bytes
 
 #define VALID 1
@@ -16,10 +14,6 @@
 
 #define SUCCESS 0
 #define ERROR 1
-
-
-int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
-
 
 /* ******************************************************************
  *                        FUNCIONES PRIVADAS
@@ -112,50 +106,8 @@ static unsigned int find_lru(cache_t* self,int setnum) {
   return way; 
 }
 
-
-
-/* ******************************************************************
- *                        PRIMITIVAS CACHE
- * *****************************************************************/
-
-int cache_get_blocks(int cs,int bs) {
-  return (cs * 1024) / bs;
-}
-
-int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
-  //inicializa la memoria en cero.
-  memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
-  self->blocks_len = cache_get_blocks(cs, bs);
-
-  bool error = false;
-
-  for (int i=0; i < self->blocks_len; i++) {
-    if (block_init(blocks + i,bs) == ERROR) {   
-      error = true;
-    }
-  }
-
-  if(error) {
-    cache_destroy(self);
-    return ERROR;
-  }
-
-  self->blocks = blocks;
-  self->ways = ways;
-  self->total_accesses = 0;
-  self->missed_accesses = 0;
-  self->size = cs;
-  self->block_size = bs;
-
-  self->bits_offset = get_bits(self->blocks_len / self->ways);
-  self->bits_index = get_bits(self->block_size);
-  self->bits_tag = WORD_SIZE * 8 - self->bits_index - self->bits_offset;
-
-  return SUCCESS;
-}
-
 //REVISARLO AL PROGRAMAR EL WRITE
-unsigned int is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
+static unsigned int is_dirty(cache_t* self,int way, int setnum) { // EN LOS PAR ME VIENE LA VIA Y EL SET COMO ORDEN(1ERO ,2DO)
   if(way > self->ways) return -1;
   
   int index = (setnum - 1) * self->ways - 1;
@@ -204,7 +156,6 @@ static void read_block(cache_t* self,int blocknum) {
   //LO DE SI ES VALIDO NO ESTOY SEGURO SI HACE FALTA CHEQUEARLO
   block_t* block = self->blocks + set_offset + way;
   if (is_dirty(self, way, setnum) && block->valid == VALID) write_block(self, way, setnum);
-  
 
   //copio el bloque a la cache en el conjunto correspondiente.
   block->valid = VALID;
@@ -214,6 +165,46 @@ static void read_block(cache_t* self,int blocknum) {
   //copio el tag del bloque.
   uint16_t block_address = (uint16_t)(blocknum * self->block_size);
   block->tag = find_tag_by_addr(self,block_address);
+}
+
+/* ******************************************************************
+ *                        PRIMITIVAS CACHE
+ * *****************************************************************/
+
+int cache_get_blocks(int cs,int bs) {
+  return (cs * 1024) / bs;
+}
+
+int cache_init(cache_t* self,block_t *blocks,int ways,int cs,int bs) {
+  //inicializa la memoria en cero.
+  memset(mainMemory, 0, WORD_SIZE * MEMORY_SIZE);
+  self->blocks_len = cache_get_blocks(cs, bs);
+
+  bool error = false;
+
+  for (int i=0; i < self->blocks_len; i++) {
+    if (block_init(blocks + i,bs) == ERROR) {   
+      error = true;
+    }
+  }
+
+  if(error) {
+    cache_destroy(self);
+    return ERROR;
+  }
+
+  self->blocks = blocks;
+  self->ways = ways;
+  self->total_accesses = 0;
+  self->missed_accesses = 0;
+  self->size = cs;
+  self->block_size = bs;
+
+  self->bits_offset = get_bits(self->blocks_len / self->ways);
+  self->bits_index = get_bits(self->block_size);
+  self->bits_tag = WORD_SIZE * 8 - self->bits_index - self->bits_offset;
+
+  return SUCCESS;
 }
 
 char cache_read_byte(cache_t* self,uint16_t address) {
@@ -229,11 +220,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   
   //bloques que me tengo que desplzar.
   int set_offset = self->ways * setnum;
-  //int way = find_lru(self,setnum);  NO SE USA
-
   
-  //ACA CREO QUE SOLO HARIA FALTA SUMAR SET_OFFSET
-  //block_t* set = self->blocks + set_offset + way;
   block_t* set = self->blocks + set_offset;
   block_t* block = NULL;
   unsigned int tag = find_tag_by_addr(self,address);
@@ -265,8 +252,9 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   //hay que buscar el bloque en memoria.
   if (!found) {
     read_block(self,blocknum);
-    //for (int i=0; i < self->ways; i++) {
-    for (int i=0; (i < self->ways) || (!found) ; i++) {
+    for (int i=0; i < self->ways; i++) {
+    //no es necesario la condicion !found porque se ejecuto el read_block de arriba
+    //for (int i=0; (i < self->ways) || (!found) ; i++) {
       block = set + i;
       if(block->tag == tag) {
         int16_t word = *(block->words + word_offset);
@@ -296,8 +284,6 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
   //el offset del set en bloques
   unsigned int set_offset = setnum * self->ways;
 
-  //ACA CREO QUE SOLO HARIA FALTA SUMAR SET_OFFSET
-  //block_t* set = self->blocks + set_offset + way;
   block_t* set = self->blocks + set_offset;
   block_t* block = NULL;
 
@@ -307,7 +293,6 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
 
   //Una vez que estamos dentro del conjunto buscado nuestra cache funciona como una FA,por lo que nuestro
   //bloque puede estar en cualquiera de las 4 vias
-  //for (int i=0; i < self->ways; i++) {
   for (int i=0; (i < self->ways) || (!found) ; i++) {
     block = set + i;
     if(block->tag == tag && block->valid == VALID) {
@@ -324,11 +309,15 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
   if (!found) {
     unsigned int blocknum = address / self->block_size;  
     read_block(self, blocknum);
-    //for (int i=0; i < self->ways; i++) {
-    for (int i=0; (i < self->ways) || (!found) ; i++) {
+    /* Aca pasa lo mismo. Si ya ejecutaste el read_block de arriba no tiene sentido hacer un !found
+     * porque el  bloque esta en memoria. Por esta razon !found = true siempre.
+     */
+    //for (int i=0; (i < self->ways) || (!found) ; i++) {
+    for (int i=0; i < self->ways; i++) {
       block = set + i;
       if(block->tag == tag) {
         //aca hay que escribir el value teniendo en cuenta el offset que esta en bytes.
+        //esto queda muy feo de leer habria que mejorarlo.
         *((char*)block->words + offset) = value;
         //Como escribi el bloque debo marcarlo como dirty
         block->dirty = DIRTY;
@@ -337,7 +326,6 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
   }
 
   update_lru_distance(self,block,setnum);
-
 } 
 
 int cache_get_miss_rate(cache_t* self) {

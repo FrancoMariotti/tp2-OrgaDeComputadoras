@@ -43,7 +43,7 @@ void start_simulation(int cache_size,int block_size,int ways) {
    * leer las instrucciones y separar
    * la instruccion de los parametros.
    */
-  sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
+  //sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
 
   cache_destroy(&cache);
 }
