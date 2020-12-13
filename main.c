@@ -1,8 +1,16 @@
+#define _GNU_SOURCE
 #include "stdio.h"
 #include "getopt.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include "string.h"
 #include "cache.h"
+
+#define FILENAME_LENGTH 50
+#define COMMAND_LENGTH 5
+
+#define SUCCESS 0
+#define ERROR 1
 
 #define V_OPTION 'V'
 #define H_OPTION 'h'
@@ -33,27 +41,38 @@ void show_invalid(){
   printf(INVALID_MESSAGE);
 }
 
-void start_simulation(int cache_size,int block_size,int ways) {
+void start_simulation(FILE* stream,int cache_size,int block_size,int ways) {
   cache_t cache;
   int len_blocks = cache_get_blocks(cache_size,block_size);
   block_t blocks[len_blocks];
   cache_init(&cache,blocks,ways,cache_size,block_size);
-  /* para parsear las instrucciones.
-   * esto sumado a getline me permiten
-   * leer las instrucciones y separar
-   * la instruccion de los parametros.
-   */
-  //sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
+
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t nread;
+  char command[COMMAND_LENGTH];
+
+  while ((nread = getline(&line, &len, stream)) != -1) {
+    if(sscanf( line, "%s", command) == -1) {
+      //informar error.
+    }
+
+    printf("El comando ingresado es:%s",command);
+  }
 
   cache_destroy(&cache);
+  free(line);
 }
 
 int main(int argc, char **argv) {
   int c; 
 
+  FILE* stream;
   int cache_size = 0;
   int block_size = 0;
   int ways = 0;
+  char filename[FILENAME_LENGTH];
+  memset(filename,0,FILENAME_LENGTH);
 
   while (true) {
     int option_index = 0;
@@ -82,17 +101,23 @@ int main(int argc, char **argv) {
     } else if (c == BLOCK_OPTION) {
       block_size = atoi(optarg);
     } else if (c == O_OPTION) {
-      
+      memcpy(filename, optarg, FILENAME_LENGTH);
     } else {
       show_invalid();
     }
   }
 
-  if(cache_size && block_size && ways) {
-    start_simulation(cache_size,block_size,ways);
+  //abrimos archivo de instrucciones en modo lectura.
+  stream = fopen(filename,"r");
+
+  if(!stream) {
+    //informar error
+    return ERROR;
   }
 
+  if(cache_size && block_size && ways) {
+    start_simulation(stream,cache_size,block_size,ways);
+  }
 
-
-  return 0;
+  return SUCCESS;
 }
