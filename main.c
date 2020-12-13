@@ -53,8 +53,19 @@ void start_simulation(FILE* stream,int cache_size,int block_size,int ways) {
   char command[COMMAND_LENGTH];
 
   while ((nread = getline(&line, &len, stream)) != -1) {
-    if(sscanf( line, "%s", command) == -1) {
+    if (sscanf( line, "%s", command) == -1) {
       //informar error.
+    }
+    if (strcmp(command,INIT_COMMAND)) {
+
+    } else if (strcmp(command,READ_COMMAND)) {
+
+    } else if (strcmp(command,WRITE_COMMAND)) {
+      
+    } else if (strcmp(command,MISSRATE_COMMAND)) {
+      
+    } else {
+      
     }
 
     printf("El comando ingresado es:%s",command);
@@ -90,7 +101,7 @@ int main(int argc, char **argv) {
     if (c == -1)
       break;
 
-    if ( c == V_OPTION ) {
+    if (c == V_OPTION) {
 
     } else if (c == H_OPTION) {
       show_help();
@@ -110,12 +121,12 @@ int main(int argc, char **argv) {
   //abrimos archivo de instrucciones en modo lectura.
   stream = fopen(filename,"r");
 
-  if(!stream) {
+  if (!stream) {
     //informar error
     return ERROR;
   }
 
-  if(cache_size && block_size && ways) {
+  if (cache_size && block_size && ways) {
     start_simulation(stream,cache_size,block_size,ways);
   }
 
