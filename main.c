@@ -29,7 +29,7 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 void show_error(char* error) {
-  fprintf(stderr,"ERROR: %s%s%s\n" ,ANSI_COLOR_RED,error,ANSI_COLOR_RESET);
+  fprintf(stderr,"%sERROR: %s%s\n" ,ANSI_COLOR_RED,error,ANSI_COLOR_RESET);
 }
 
 void show_help(){
