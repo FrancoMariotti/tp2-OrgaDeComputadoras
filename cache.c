@@ -15,6 +15,9 @@
 #define SUCCESS 0
 #define ERROR 1
 
+#define MEMORY_SIZE 32768 //en cantidad de palabras
+int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
+
 /* ******************************************************************
  *                        FUNCIONES PRIVADAS
  * *****************************************************************/
@@ -52,8 +55,8 @@ static int get_bits(int num) {
   return bits;
 }
 
-static unsigned int find_set_by_addr(cache_t* self,uint16_t address) {
-  int index =  address >> self->bits_offset;
+static uint16_t find_set_by_addr(cache_t* self,uint16_t address) {
+  uint16_t index =  address >> self->bits_offset;
   index = index << (self->bits_offset + self->bits_tag);
   index = index >> (self->bits_tag + self->bits_offset);
   
@@ -66,14 +69,14 @@ static int find_set_by_blocknum(cache_t* self,int blocknum) {
   return blocknum % (self->blocks_len / self->ways);
 }
 
-static unsigned int find_offset_by_addr(cache_t* self,uint16_t address) {
-  int offset =  address << (self->bits_tag + self->bits_index);
+static uint16_t find_offset_by_addr(cache_t* self,uint16_t address) {
+  uint16_t offset =  address << (self->bits_tag + self->bits_index);
   offset = offset >> (self->bits_tag + self->bits_index);
   
   return offset; 
 }
 
-static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) { 
+static uint16_t find_tag_by_addr(cache_t* self,uint16_t address) { 
   return (address >> (self->bits_index + self->bits_offset)); 
 }
 
@@ -118,7 +121,7 @@ static unsigned int is_dirty(cache_t* self,int way, int setnum) {
 /* debe escribir en memoria los datos contenidos en el bloque setnum de la via way */
 static int write_block(cache_t* self, int way, int setnum) {
   /* Obtenemos el contenido de la cache */
-  block_t block = self->blocks[(setnum - 1) * self->ways + (way - 1)];
+  block_t block = self->blocks[setnum * self->ways + way];
 
   if (!block.valid) return ERROR;
 
@@ -139,7 +142,7 @@ static int write_block(cache_t* self, int way, int setnum) {
   return SUCCESS;
 }
 
-static void read_block(cache_t* self,int blocknum) {
+static int read_block(cache_t* self,int blocknum) {
   self->missed_accesses ++;
   int setnum  = find_set_by_blocknum(self,blocknum);
   //bloques que me tengo que desplzar.
@@ -150,7 +153,11 @@ static void read_block(cache_t* self,int blocknum) {
   block_t* block = self->blocks + set_offset + way;
   //Aca block es el bloque que va a ser reemplazado por lo que antes de hacer esto,debemos revisar
   //si el bit de dirty esta en 1 y en ese caso escribir el bloque en memoria
-  if (is_dirty(self, way, setnum)) write_block(self, way, setnum);
+  if (is_dirty(self, way, setnum)) {
+    if (write_block(self, way, setnum)) {
+      return ERROR;
+    }
+  } 
 
   //copio el bloque a la cache en el conjunto correspondiente.
   block->valid = VALID;
@@ -160,6 +167,8 @@ static void read_block(cache_t* self,int blocknum) {
   //copio el tag del bloque.
   uint16_t block_address = (uint16_t)(blocknum * self->block_size);
   block->tag = find_tag_by_addr(self,block_address);
+
+  return SUCCESS;
 }
 
 /* ******************************************************************
@@ -214,8 +223,8 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   unsigned int tag = find_tag_by_addr(self,address);
 
   unsigned int block_offset = find_offset_by_addr(self,address);
-  int word_offset = block_offset / WORD_SIZE;
-  int byte_offset = block_offset % WORD_SIZE;
+  unsigned int word_offset = block_offset / WORD_SIZE;
+  unsigned int byte_offset = block_offset % WORD_SIZE;
   int blocknum = address / self->block_size;
   char data = 0;
   bool found = false;
@@ -229,9 +238,9 @@ char cache_read_byte(cache_t* self,uint16_t address) {
       int16_t word = *(block->words + word_offset);
 
       if (byte_offset == UPPER_BYTE) {
-        data =  word >> 8;
+        data =  (char)(word >> 8);
       } else {
-        data =  word & 0xFF;
+        data =  (char)(word & 0xFF);
       }
     }
   }
@@ -247,9 +256,9 @@ char cache_read_byte(cache_t* self,uint16_t address) {
         found = true;
 
         if (byte_offset == UPPER_BYTE) {
-          data = word >> 8;
+          data = (char)(word >> 8);
         } else {
-          data = word & 0xFF;
+          data = (char)(word & 0xFF);
         }
       }
     }
@@ -262,9 +271,10 @@ char cache_read_byte(cache_t* self,uint16_t address) {
 
 //Escribe el byte value en la posicion correcta del bloque que corresponde a address
 void cache_write_byte(cache_t* self,uint16_t address, char value) {
-  
   unsigned int tag = find_tag_by_addr(self,address);
-  unsigned int offset = find_offset_by_addr(self,address);
+  unsigned int block_offset = find_offset_by_addr(self,address);
+  unsigned int word_offset = block_offset / WORD_SIZE;
+  unsigned int byte_offset = block_offset % WORD_SIZE;
   unsigned int setnum  = find_set_by_addr(self,address);
   //el offset del set en bloques
   unsigned int set_offset = setnum * self->ways;
@@ -286,7 +296,14 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
       found = true;
       
       //aca hay que escribir el value teniendo en cuenta el offset que esta en bytes.
-      *((int8_t*)block->words + offset) = value;
+      int16_t data = block->words[word_offset];
+      if (byte_offset == UPPER_BYTE) {         
+        data = (int16_t)((value << 8) | (data && 0xFF));
+      } else {
+        data = (int16_t)(value | (data && 0xFF00));
+      }
+
+      block->words[word_offset] = data;
       
       //Como escribi el bloque debo marcarlo como dirty
       block->dirty = DIRTY;
@@ -304,8 +321,15 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
         found = true;
         
         //aca hay que escribir el value teniendo en cuenta el offset que esta en bytes.
-        *((int8_t*)block->words + offset) = value;
-        
+
+        int16_t data = block->words[word_offset];
+        if (byte_offset == UPPER_BYTE) {         
+          data = (int16_t)((value << 8) | (data && 0xFF));
+        } else {
+          data = (int16_t)(value | (data && 0xFF00));
+        }
+
+        block->words[word_offset] = data;
         //Como escribi el bloque debo marcarlo como dirty
         block->dirty = DIRTY;
       }
@@ -315,9 +339,9 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
   update_lru_distance(self,block,setnum);
 } 
 
-int cache_get_miss_rate(cache_t* self) {
+float cache_get_miss_rate(cache_t* self) {
   if(self->total_accesses) {
-    return self->missed_accesses / self->total_accesses;
+    return (float)self->missed_accesses / (float)self->total_accesses;
   }
   return 0;
 }

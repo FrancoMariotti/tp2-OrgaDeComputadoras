@@ -2,9 +2,6 @@
 #define CACHE_H
 #include "stdint.h"
 
-#define MEMORY_SIZE 32768 //en cantidad de palabras
-int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
-
 typedef struct block {
   int tag;
   int16_t *words;
@@ -40,7 +37,7 @@ void cache_write_byte(cache_t* self,uint16_t address, char value);
 /* PRE: la cache fue creada.
  * Devuelve la tasa de miss de la cache simulada 
  */
-int cache_get_miss_rate(cache_t* self);
+float cache_get_miss_rate(cache_t* self);
 /* Dado un tamanio de cache cs y un tamanio de bloque bs determina la 
  * cantidad de bloques que tendria la cache. 
  */
