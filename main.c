@@ -32,12 +32,12 @@ void show_help(){
     tp2 -V \n \
     tp2 options archivo \n \
     Options: \n \
-    -V, --version Print version and quit.\n \
-    -h, --help Print this information.\n \
-    -o, --output Location of the output file.\n \
-    -w, --input Location of the input file.\n \
-    -cs, --action Program action: encode (default) or decode.\n \
-    -bs, --action Program action: encode (default) or decode.\n \
+    -V, --version Version del programa.\n \
+    -h, --help Imprime Ayuda.\n \
+    -o, --output Archivo de salida.\n \
+    -w, --ways Cantidad de vı́as.\n \
+    -cs, --cachesize Tamaño del caché en kilobytes.\n \
+    -bs, --blocksize Tamaño de bloque en bytes.\n \
     Examples:\n \
     tp2 -w 4 -cs 8 -bs 16 prueba1.mem\n");
 }
