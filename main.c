@@ -104,6 +104,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
   }
 
   free(line);
+  cache_destroy(&cache);
 }
 
 int main(int argc, char **argv) {
