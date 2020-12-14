@@ -59,7 +59,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
 
   while ((nread = getline(&line, &len, input)) != -1) {
     if (sscanf( line, "%s", command) == -1) {
-      //informar error.
+      //informar error.s
     }
     if (strcmp(command,INIT_COMMAND)) {
 
