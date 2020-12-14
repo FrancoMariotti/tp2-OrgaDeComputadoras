@@ -12,12 +12,17 @@
 #define SUCCESS 0
 #define ERROR 1
 
-#define V_OPTION 'V'
-#define H_OPTION 'h'
-#define O_OPTION 'o'
-#define W_OPTION 'w'
+#define VERSION_OPTION 'V'
+#define HELP_OPTION 'h'
+#define OUTPUT_OPTION 'o'
+#define WAYS_OPTION 'w'
 #define CACHE_OPTION 'c'
 #define BLOCK_OPTION 'b'
+
+#define INIT_COMMAND 'init'
+#define READ_COMMAND 'R'
+#define WRITE_COMMAND 'W'
+#define MISSRATE_COMMAND 'MR'
 
 #define INVALID_MESSAGE "Invalid option , use -h or --help to list valid commands\n"
 
@@ -41,7 +46,7 @@ void show_invalid(){
   printf(INVALID_MESSAGE);
 }
 
-void start_simulation(FILE* stream,int cache_size,int block_size,int ways) {
+void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int ways) {
   cache_t cache;
   int len_blocks = cache_get_blocks(cache_size,block_size);
   block_t blocks[len_blocks];
@@ -52,7 +57,7 @@ void start_simulation(FILE* stream,int cache_size,int block_size,int ways) {
   ssize_t nread;
   char command[COMMAND_LENGTH];
 
-  while ((nread = getline(&line, &len, stream)) != -1) {
+  while ((nread = getline(&line, &len, input)) != -1) {
     if (sscanf( line, "%s", command) == -1) {
       //informar error.
     }
@@ -78,7 +83,7 @@ void start_simulation(FILE* stream,int cache_size,int block_size,int ways) {
 int main(int argc, char **argv) {
   int c; 
 
-  FILE* stream;
+  FILE* output = stdout;
   int cache_size = 0;
   int block_size = 0;
   int ways = 0;
@@ -89,12 +94,12 @@ int main(int argc, char **argv) {
     int option_index = 0;
 
     static struct option long_options[] = {
-      {"version", no_argument, 0, V_OPTION},
-      {"help", no_argument, 0, H_OPTION},
-      {"ways", required_argument, 0, W_OPTION},
+      {"version", no_argument, 0, VERSION_OPTION},
+      {"help", no_argument, 0, HELP_OPTION},
+      {"ways", required_argument, 0, WAYS_OPTION},
       {"cachesize", no_argument, 0, CACHE_OPTION},
       {"blocksize", no_argument, 0, BLOCK_OPTION},
-      {"output", required_argument, 0, O_OPTION},
+      {"output", required_argument, 0, OUTPUT_OPTION}
     };
 
     c = getopt_long(argc, argv, "c:b:Vhw:o:", long_options, &option_index);
@@ -119,15 +124,12 @@ int main(int argc, char **argv) {
   }
 
   //abrimos archivo de instrucciones en modo lectura.
-  stream = fopen(filename,"r");
-
-  if (!stream) {
-    //informar error
-    return ERROR;
+  if (filename) {
+    output = fopen(filename,"r");
   }
 
   if (cache_size && block_size && ways) {
-    start_simulation(stream,cache_size,block_size,ways);
+    start_simulation(output,cache_size,block_size,ways);
   }
 
   return SUCCESS;
