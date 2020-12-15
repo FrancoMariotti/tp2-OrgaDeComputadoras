@@ -104,4 +104,71 @@ W 4096, 55
 W 8192, 100
 W 16384, 101
 
+------------------------
+
+caso cache de w 1 -c 16 -b 128 para prueba3.mem
+
+128 entradas de cache -> necesito 7 bits de index
+128 bytes a direccionar por bloque -> necesito 7 bits de offset
+
+00 | 0000000 | 0000000
+00 | 0001000 | 0000000
+00 | 0010000 | 0000000
+00 | 0011000 | 0000000
+00 | 0100000 | 0000000
+00 | 1000000 | 0000000
+01 | 0000000 | 0000000
+
+solo mapean al mismo conjunto la dir 0 y la 16384
+
+Tengo todos misses de escritura = 7 
+W 0, 123
+W 1024, 234
+W 2048, 33
+W 3072, 44
+W 4096, 55
+W 8192, 100
+W 16384, 101
+R 0            Tengo miss porque en cache esta el bloque de la dir 16384,cargo el de la 0 en cache
+R 1024         hit
+R 2048         hit
+R 3072         hit
+R 4096         hit
+R 8192         hit
+R 16384        Tengo miss porque en cache esta el bloque de la dir 0,cargo el de la 16384 en cache
+MR             (7 + 2)/14 = 0.64285
+
+------------------------
+
+caso cache de w 4 -c 4 -b 32 para prueba3.mem
+
+32 entradas de cache -> necesito 5 bits de index
+32 bytes a direccionar por bloque -> necesito 5 bits de offset
+
+000000 | 00000 | 00000
+000001 | 00000 | 00000
+000010 | 00000 | 00000
+000011 | 00000 | 00000
+000100 | 00000 | 00000
+001000 | 00000 | 00000
+010000 | 00000 | 00000
+
+todas las direcciones mapean al mismo conjunto,solo tengo 4 vias disponibles
+
+Tengo todos misses de escritura = 7 
+W 0, 123
+W 1024, 234
+W 2048, 33
+W 3072, 44
+W 4096, 55
+W 8192, 100
+W 16384, 101
+R 0          Miss  
+R 1024       Miss  
+R 2048       Miss  
+R 3072       Miss  
+R 4096       Miss  
+R 8192       Miss  
+R 16384      Miss  
+MR             (7 + 7)/14 = 1
 
