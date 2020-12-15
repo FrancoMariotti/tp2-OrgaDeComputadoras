@@ -56,16 +56,16 @@ static int get_bits(int num) {
 }
 
 static uint16_t find_set_by_addr(cache_t* self,uint16_t address) {
-  uint16_t index =  address >> self->bits_offset;
-  index = index << (self->bits_offset + self->bits_tag);
-  index = index >> (self->bits_tag + self->bits_offset);
+  uint16_t index =  (uint16_t)(address >> self->bits_offset);
+  index <<= (self->bits_offset + self->bits_tag);
+  index >>= (self->bits_tag + self->bits_offset);
   
   return index; 
 }
 
 static uint16_t find_offset_by_addr(cache_t* self,uint16_t address) {
-  uint16_t offset =  address << (self->bits_tag + self->bits_index);
-  offset = offset >> (self->bits_tag + self->bits_index);
+  uint16_t offset =  (uint16_t)(address << (self->bits_tag + self->bits_index));
+  offset  >>= (self->bits_tag + self->bits_index);
   
   return offset; 
 }
@@ -75,7 +75,7 @@ static unsigned int get_memory_offset(cache_t* self,unsigned int blocknum) {
 }
 
 static uint16_t find_tag_by_addr(cache_t* self,uint16_t address) { 
-  return (address >> (self->bits_index + self->bits_offset)); 
+  return (uint16_t)(address >> (self->bits_index + self->bits_offset)); 
 }
 
 static unsigned int get_set_offset(cache_t* self,unsigned int setnum) {
@@ -232,7 +232,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   
   block_t* set = self->blocks + set_offset;
   block_t* block = NULL;
-  
+
   uint16_t tag = find_tag_by_addr(self,address);
   uint16_t block_offset = find_offset_by_addr(self,address);
   unsigned int word_offset = get_word_offset(block_offset);
