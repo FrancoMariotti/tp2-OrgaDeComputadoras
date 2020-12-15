@@ -313,9 +313,9 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
       //aca hay que escribir el value teniendo en cuenta el offset que esta en bytes.
       int16_t data = block->words[word_offset];
       if (byte_offset == UPPER_BYTE) {         
-        data = (int16_t)((value << 8) | (data && 0xFF));
+        data = (int16_t)((value << 8) | (data & 0xFF));
       } else {
-        data = (int16_t)(value | (data && 0xFF00));
+        data = (int16_t)(value | (data & 0xFF00));
       }
 
       block->words[word_offset] = data;
@@ -338,9 +338,9 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
 
         int16_t data = block->words[word_offset];
         if (byte_offset == UPPER_BYTE) {         
-          data = (int16_t)((value << 8) | (data && 0xFF));
+          data = (int16_t)((value << 8) | (data & 0xFF));
         } else {
-          data = (int16_t)(value | (data && 0xFF00));
+          data = (int16_t)(value | (data & 0xFF00));
         }
 
         block->words[word_offset] = data;
