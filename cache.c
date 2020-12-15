@@ -63,17 +63,15 @@ static uint16_t find_set_by_addr(cache_t* self,uint16_t address) {
   return index; 
 }
 
-/*static int find_set_by_blocknum(cache_t* self,int blocknum) {
-  if(!self->ways) return -1;
-
-  return blocknum % (self->blocks_len / self->ways);
-}*/
-
 static uint16_t find_offset_by_addr(cache_t* self,uint16_t address) {
   uint16_t offset =  address << (self->bits_tag + self->bits_index);
   offset = offset >> (self->bits_tag + self->bits_index);
   
   return offset; 
+}
+
+static unsigned int get_memory_offset(cache_t* self,unsigned int blocknum) {
+  return blocknum * self->block_size / WORD_SIZE;
 }
 
 static uint16_t find_tag_by_addr(cache_t* self,uint16_t address) { 
@@ -150,7 +148,7 @@ static int write_block(cache_t* self, int way, int setnum) {
   //Escribimos el bloque de cache en memoria
   unsigned int blocknum = get_blocknum_by_address(self,(uint16_t)address);
 
-  int memory_offset =  blocknum * self->block_size / WORD_SIZE;
+  int memory_offset =  get_memory_offset(self,blocknum);
   memcpy(mainMemory + memory_offset, words_to_write, self->block_size);
 
   //una vez que escribimos nuestro bloque en memoria, este vuelve a estar limpio
@@ -176,7 +174,7 @@ static int read_block(cache_t* self,int blocknum,int setnum,unsigned int tag) {
 
   //copio el bloque a la cache en el conjunto correspondiente.
   block->valid = VALID;
-  int memory_offset =  blocknum * self->block_size / WORD_SIZE;
+  int memory_offset =  get_memory_offset(self,blocknum);
   memcpy(block->words, mainMemory + memory_offset , self->block_size);  
 
   //copio el tag del bloque.
