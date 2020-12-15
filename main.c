@@ -60,6 +60,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
   cache_t cache;
   int len_blocks = cache_get_blocks(cache_size,block_size);
   block_t blocks[len_blocks];
+  memset(blocks,0,sizeof(block_t) * len_blocks);
   cache_init(&cache,blocks,ways,cache_size,block_size);
   char *line = NULL;
   size_t len = 0;
@@ -75,7 +76,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
     current_missrate = cache_get_miss_rate(&cache);
     
     if (!strcmp(command,READ_COMMAND)) {
-      uint16_t address;
+      uint16_t address = 0;
       if (sscanf(line, "%s %hd", command,&address) == -1) {
         show_error("en lectura de comando");
       }
@@ -88,8 +89,8 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
         fprintf(output,"HIT DE LECTURA\n");
       }
     } else if (!strcmp(command,WRITE_COMMAND)) {
-      uint16_t address;
-      int value;
+      uint16_t address = 0;
+      int value = 0;
       if (sscanf(line, "%s %hd, %d", command,&address,&value) == -1) {
         show_error("en lectura de comando");
       }
@@ -187,7 +188,6 @@ int main(int argc, char **argv) {
   if (output != stdout) {
     fclose(output);
   }
-
 
   return SUCCESS;
 }

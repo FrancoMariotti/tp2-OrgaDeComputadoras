@@ -74,8 +74,9 @@ static unsigned int get_memory_offset(cache_t* self,unsigned int blocknum) {
   return blocknum * self->block_size / WORD_SIZE;
 }
 
-static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) { 
-  return address >> (self->bits_index + self->bits_offset); 
+static unsigned int find_tag_by_addr(cache_t* self,uint16_t address) {
+  unsigned int tag = address >> (self->bits_index + self->bits_offset);
+  return tag; 
 }
 
 static unsigned int get_set_offset(cache_t* self,unsigned int setnum) {
@@ -231,7 +232,7 @@ char cache_read_byte(cache_t* self,uint16_t address) {
   unsigned int set_offset = get_set_offset(self,setnum);
   
   block_t* set = self->blocks + set_offset;
-  block_t* block = NULL;
+  block_t* block = set;
 
   unsigned int tag = find_tag_by_addr(self,address);
   unsigned int block_offset = find_offset_by_addr(self,address);
@@ -295,7 +296,7 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
 
 
   block_t* set = self->blocks + set_offset;
-  block_t* block = NULL;
+  block_t* block = set;
 
   //Busco en cache
   self->total_accesses ++;
