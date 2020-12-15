@@ -32,6 +32,10 @@ void show_error(char* error) {
   fprintf(stderr,"%sERROR: %s%s\n" ,ANSI_COLOR_RED,error,ANSI_COLOR_RESET);
 }
 
+void show_version(){
+  printf("Versión 1.0.0\n");
+}
+
 void show_help(){
   printf("Usage: \n \
     tp2 -h \n \
@@ -138,9 +142,11 @@ int main(int argc, char **argv) {
       break;
 
     if (c == VERSION_OPTION) {
-
+      show_version();
+      return SUCCESS;
     } else if (c == HELP_OPTION) {
       show_help();
+      return SUCCESS;
     } else if (c == WAYS_OPTION) {
       ways = atoi(optarg);
     } else if (c == CACHE_OPTION) {
