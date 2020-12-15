@@ -305,8 +305,7 @@ void cache_write_byte(cache_t* self,uint16_t address, char value) {
   //bloque puede estar en cualquiera de las 4 vias
   for (int i=0; (i < self->ways) && (!found) ; i++) {
     block = set + i;
-    if(block->tag == tag && block->valid == VALID) {
-      
+    if(block->tag == tag && block->valid == VALID) {  
       //se encontro el bloque en la cache.
       found = true;
       

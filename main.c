@@ -80,12 +80,12 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
         show_error("en lectura de comando");
       }
       unsigned char value = cache_read_byte(&cache,address);
-      printf("Value:%d\n", value);
+      fprintf(output,"Value:%d\n", value);
 
       if(cache_get_miss_rate(&cache) >= current_missrate) {
-        printf("MISS DE LECTURA\n");
+        fprintf(output,"MISS DE LECTURA\n");
       } else {
-        printf("HIT DE LECTURA\n");
+        fprintf(output,"HIT DE LECTURA\n");
       }
     } else if (!strcmp(command,WRITE_COMMAND)) {
       uint16_t address;
@@ -96,12 +96,12 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
       cache_write_byte(&cache,address,(char)value);
 
       if(cache_get_miss_rate(&cache) >= current_missrate) {
-        printf("MISS DE ESCRITURA\n");
+        fprintf(output,"MISS DE ESCRITURA\n");
       } else {
-        printf("HIT DE ESCRITURA\n");
+        fprintf(output,"HIT DE ESCRITURA\n");
       }
     } else if (!strcmp(command,MISSRATE_COMMAND)) {
-      printf("Miss rate:%f\n",cache_get_miss_rate(&cache));
+      fprintf(output,"Miss rate:%f\n",cache_get_miss_rate(&cache));
     } else {
       show_error("en lectura de comando");
     }
@@ -169,14 +169,25 @@ int main(int argc, char **argv) {
 
   //abrimos archivo de instrucciones en modo lectura.
   input = fopen(input_filename,"r");
-  
-  //output = fopen(output_filename,"r");
+  if (!input) {
+    show_error("al intentar archivo de entrada");
+    return ERROR;
+  }
+
+  if (strlen(output_filename) > 0) {
+    output = fopen(output_filename,"w");
+  }
 
   if (cache_size && block_size && ways) {
     start_simulation(input,output,cache_size,block_size,ways);
   }
 
   fclose(input);
+
+  if (output != stdout) {
+    fclose(output);
+  }
+
 
   return SUCCESS;
 }
