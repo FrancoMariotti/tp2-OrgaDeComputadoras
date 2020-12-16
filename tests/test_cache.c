@@ -10,8 +10,7 @@
 #define BLOCK_SIZE 32
 #define WAYS 4
 
-#define MEMORY_SIZE 32768 //en cantidad de palabras
-int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
+extern int16_t mainMemory[];
 
 //Pruebas inicializacion de la cache
 
@@ -67,10 +66,6 @@ int test01AlEscribirUnDatoQueEstaEnCacheHayHitYSeEscribeElBloqueEnCache(cache_t*
 	assert(self->missed_accesses == 1);
 	char value = cache_read_byte(self,address);
 	assert(self->missed_accesses == 1);
-
-	//esto depende de la implementacion. puede generar errores 
-	//si se cambia la implementacion interna.
-	//assert(self->blocks[0].words[0] == 20);
 	assert(value == 20);
 
 	printf("Al escribir un dato que esta en cache hay hit y se escribe en cache : OK\n");
@@ -83,8 +78,8 @@ int test02AlQuitarUnBloqueDeCacheEsteSeEscribeEnMemoria(cache_t* self){
 	char value = 30;
 	//Llenamos el conjunto 0 de cache y al traer el ultimo bloque de la iteracion
 	//se reemplaza el bloque de la dir 0 por ser el LRU y este escribe en memoria
-	for (int i = 0; i < 4; i ++) {
-		address += total_sets * WAYS * BLOCK_SIZE;
+	for (char i = 0; i < 4; i ++) {
+		address += (uint16_t)(total_sets * WAYS * BLOCK_SIZE);
 		value += i;
 		cache_write_byte(self,address, value);
 	}
