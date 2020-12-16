@@ -61,11 +61,14 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
   int len_blocks = cache_get_blocks(cache_size,block_size);
   block_t blocks[len_blocks];
   memset(blocks,0,sizeof(block_t) * len_blocks);
+  
   cache_init(&cache,blocks,ways,cache_size,block_size);
+
   char *line = NULL;
   size_t len = 0;
   ssize_t nread;
   char command[COMMAND_LENGTH];
+  
   float current_missrate = 0;
   uint16_t address = 0;
 
@@ -73,6 +76,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
     memset(command,0,COMMAND_LENGTH);
     if (sscanf(line, "%s", command) == -1) {
       show_error("en lectura de comando");
+      continue;
     }
     current_missrate = cache_get_miss_rate(&cache);
     
@@ -80,6 +84,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
       if (sscanf(line, "%s %hd", command,&address) == -1) {
         show_error("en lectura de comando");
       }
+
       unsigned char value = cache_read_byte(&cache,address);
       fprintf(output,"Value:%d\n", value);
 
