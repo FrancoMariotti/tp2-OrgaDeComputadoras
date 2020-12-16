@@ -79,8 +79,8 @@ int test02AlQuitarUnBloqueDeCacheEsteSeEscribeEnMemoria(cache_t* self){
 	//Llenamos el conjunto 0 de cache y al traer el ultimo bloque de la iteracion
 	//se reemplaza el bloque de la dir 0 por ser el LRU y este escribe en memoria
 	for (char i = 0; i < 4; i ++) {
-		address += (uint16_t)(total_sets * WAYS * BLOCK_SIZE);
-		value += i;
+		address = (uint16_t)(address + total_sets * WAYS * BLOCK_SIZE);
+		value = (char)(value + i);
 		cache_write_byte(self,address, value);
 	}
 	assert(mainMemory[0] == 20);
