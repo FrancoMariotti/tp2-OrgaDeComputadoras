@@ -16,7 +16,6 @@ int16_t mainMemory[MEMORY_SIZE]; // Memoria principal de 64KB
 //Pruebas inicializacion de la cache
 
 int test00LaCacheSeInicializaCorrectamente(cache_t* self, block_t* blocks){
-
   cache_init(self, blocks, WAYS, CACHE_SIZE, BLOCK_SIZE);
 
   assert(self->ways == WAYS);
@@ -43,40 +42,55 @@ int test00LaCacheSeInicializaCorrectamente(cache_t* self, block_t* blocks){
 //Pruebas de escritura en cache
 
 int test00AlEscribirUnDatoQueNoEstaEnCacheHayMissYSeEscribeElBloqueEnCache(cache_t* self){
-	int16_t address = 1;
+	uint16_t address = 1;
+	assert(self->missed_accesses == 0);
 	cache_write_byte(self, address, 10);
 	assert(mainMemory[0] != 10);
+	assert(self->total_accesses == 1);
 	assert(self->missed_accesses == 1);
-	assert(self->blocks[0].words[0] == 10);
+	char value = cache_read_byte(self,address);
+	assert(self->total_accesses == 2);
+	assert(self->missed_accesses == 1);
+	assert(value == 10);
 
 	printf("Al escribir un dato que no esta en cache hay miss y se escribe en cache : OK\n");
 	return SUCCESS;
 }
 
 int test01AlEscribirUnDatoQueEstaEnCacheHayHitYSeEscribeElBloqueEnCache(cache_t* self){
-	int16_t address = 1;
+	uint16_t address = 1;
+	assert(self->missed_accesses == 1);
+	assert(self->total_accesses == 2);
 	cache_write_byte(self, address, 20);
 	assert(mainMemory[0] != 20);
+	assert(self->total_accesses == 3);
 	assert(self->missed_accesses == 1);
-	assert(self->blocks[0].words[0] == 20);
+	char value = cache_read_byte(self,address);
+	assert(self->missed_accesses == 1);
+
+	//esto depende de la implementacion. puede generar errores 
+	//si se cambia la implementacion interna.
+	//assert(self->blocks[0].words[0] == 20);
+	assert(value == 20);
 
 	printf("Al escribir un dato que esta en cache hay hit y se escribe en cache : OK\n");
 	return SUCCESS;
 }
 
 int test02AlQuitarUnBloqueDeCacheEsteSeEscribeEnMemoria(cache_t* self){
-	int address = 1;
+	uint16_t address = 1;
 	int total_sets = 64;
-	int value = 30;
+	char value = 30;
 	//Llenamos el conjunto 0 de cache y al traer el ultimo bloque de la iteracion
 	//se reemplaza el bloque de la dir 0 por ser el LRU y este escribe en memoria
 	for (int i = 0; i < 4; i ++) {
 		address += total_sets * WAYS * BLOCK_SIZE;
 		value += i;
-		cache_write_byte(self, (int16_t)address, (char)value);
+		cache_write_byte(self,address, value);
 	}
 	assert(mainMemory[0] == 20);
-	assert(self->blocks[0].words[0] != 20);
+	char byte = cache_read_byte(self,address);
+	assert(byte != 20);
 
 	printf("Al quitar un bloque de cache que habia sido escrito (dirtybit == 1), este se escribe en mem ppal : OK\n");
 	return SUCCESS;
@@ -85,12 +99,11 @@ int test02AlQuitarUnBloqueDeCacheEsteSeEscribeEnMemoria(cache_t* self){
 //Pruebas de lectura en cache
 
 int test00AlLeerUnDatoQueNoEstaEnCacheHayMissYSeLeeElDatoCorrectamente(cache_t* self){
-	int16_t address = 0;
+	uint16_t address = 0;
 	mainMemory[0] = 10; 
 	char result = cache_read_byte(self, address);
-	
+	assert(self->total_accesses == 1);
 	assert(self->missed_accesses == 1);
-	assert(self->blocks[0].words[0] == 10);
 	assert(result = 10);
 
 	printf("Al leer un dato que no esta en cache hay miss y se lee el dato correctamente : OK\n");
@@ -98,9 +111,9 @@ int test00AlLeerUnDatoQueNoEstaEnCacheHayMissYSeLeeElDatoCorrectamente(cache_t* 
 }
 
 int test01AlLeerUnDatoQueEstaEnCacheHayHitYSeLeeElDatoCorrectamente(cache_t* self){
-	int16_t address = 0;
+	uint16_t address = 0;
 	char result = cache_read_byte(self, address);
-	
+	assert(self->total_accesses == 2);
 	assert(self->missed_accesses == 1);
 	assert(result = 10);
 
@@ -109,7 +122,6 @@ int test01AlLeerUnDatoQueEstaEnCacheHayHitYSeLeeElDatoCorrectamente(cache_t* sel
 }
 
 //Prueba de miss rate
-
 int test00SeCalculaElMissRateCorrectamente(cache_t* self){
 	float result = cache_get_miss_rate(self);
 	assert(result == 0.5);
