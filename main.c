@@ -67,6 +67,7 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
   ssize_t nread;
   char command[COMMAND_LENGTH];
   float current_missrate = 0;
+  uint16_t address = 0;
 
   while ((nread = getline(&line, &len, input)) != -1) {
     memset(command,0,COMMAND_LENGTH);
@@ -76,7 +77,6 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
     current_missrate = cache_get_miss_rate(&cache);
     
     if (!strcmp(command,READ_COMMAND)) {
-      uint16_t address = 0;
       if (sscanf(line, "%s %hd", command,&address) == -1) {
         show_error("en lectura de comando");
       }
@@ -89,7 +89,6 @@ void start_simulation(FILE* input,FILE* output,int cache_size,int block_size,int
         fprintf(output,"HIT DE LECTURA\n");
       }
     } else if (!strcmp(command,WRITE_COMMAND)) {
-      uint16_t address = 0;
       int value = 0;
       if (sscanf(line, "%s %hd, %d", command,&address,&value) == -1) {
         show_error("en lectura de comando");
